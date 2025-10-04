@@ -15,8 +15,8 @@ const fetchStateAgencies = async () => {
 };
 
 // 1. Update the API function to accept the checklist
-const assignAgencyToProject = async ({ projectId, agencyId, checklist }) => {
-    const { data } = await axiosInstance.put(`/projects/${projectId}/assign`, { agencyId, checklist });
+const assignAgencyToProject = async ({ projectId, assignments }) => {
+    const { data } = await axiosInstance.post(`/projects/${projectId}/assignments`, { assignments });
     return data;
 };
 
@@ -59,14 +59,20 @@ export default function AssignAgencyDialog({ project, open, onOpenChange }) {
   };
 
   // 4. Update the final submission handler
-  const handleAssign = () => {
+const handleAssign = () => {
     if (!selectedAgency || milestones.length === 0) {
-      alert("Please select an agency and add at least one milestone.");
-      return;
+        alert("Please select an agency and add at least one milestone.");
+        return;
     }
-    // Include the milestones in the mutation
-    mutation.mutate({ projectId: project._id, agencyId: selectedAgency, checklist: milestones });
-  };
+    
+    const assignments = [{
+        agency: selectedAgency,
+        allocatedFunds: 0, // You can add a field for this if needed
+        checklist: milestones
+    }];
+    
+    mutation.mutate({ projectId: project._id, assignments });
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

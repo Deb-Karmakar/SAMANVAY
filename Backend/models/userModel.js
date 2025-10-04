@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     mobile: { type: String, required: true },
+    // In userModel.js, add this field to the schema:
+    agencyId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Agency' 
+    },
     role: { 
         type: String, 
         required: true,

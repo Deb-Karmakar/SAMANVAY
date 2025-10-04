@@ -36,41 +36,33 @@ const registerUser = async (req, res) => {
     
     // 2. If the user is an Executing Agency, also create an Agency document
     if (role === 'ExecutingAgency') {
-        if (!agencyName || !state || !district || !agencyType) {
-            return res.status(400).json({ message: 'Agency Name, State, District, and Type are required for agencies.' });
+        // Find or create the agency
+        let agency = await Agency.findOne({ 
+            name: agencyName,
+            state: state 
+        });
+        
+        if (!agency) {
+            agency = await Agency.create({
+                name: agencyName,
+                type: agencyType || 'Executing',
+                state: state,
+                district: district,
+                email: email,
+                contactPerson: fullName,
+                status: 'Onboarding'
+            });
         }
         
-        const agencyExists = await Agency.findOne({ name: agencyName, state: state });
-        if (agencyExists) {
-            return res.status(400).json({ message: `Agency '${agencyName}' already exists in ${state}.`});
-        }
-
-        try {
-            const newAgency = await Agency.create({
-                name: agencyName,
-                type: 'Executing', // Hardcode as Executing
-                state,
-                district,
-                contactPerson: fullName, // Use the user's name as the initial contact
-                email: email
-            });
-
-            // Link the new agency's ID to the user document
-            user.agencyId = newAgency._id;
-
-        } catch (error) {
-             console.error("--- AGENCY CREATION FAILED ---");
-            console.error(error); 
-            return res.status(400).json({ 
-                message: 'Failed to create agency profile. See console for details.', 
-                error: error.message 
-            });
-        }
+        // Link the agency to the user
+        newUser.agencyId = agency._id;
     }
+    
+    
     // --- NEW LOGIC ENDS HERE ---
 
     // Now save the user (with the agencyId if applicable)
-    const createdUser = await user.save();
+    const createdUser = await newUser.save();
 
     if (createdUser) {
         const token = generateToken(res, createdUser._id);

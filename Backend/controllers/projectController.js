@@ -128,4 +128,101 @@ const addAssignmentsToProject = async (req, res) => {
     }
 };
 
-export { createProject, getProjects, getMyStateProjects, getProjectById, assignAgency, addAssignmentsToProject  };
+// @desc   Get projects assigned to the logged-in agency
+// @route  GET /api/projects/myagency
+const getMyAgencyProjects = async (req, res) => {
+    try {
+        if (req.user.role !== 'ExecutingAgency') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Find projects where this agency is in the assignments array
+        const projects = await Project.find({
+            'assignments.agency': req.user.agencyId
+        }).populate({
+            path: 'assignments.agency',
+            select: 'name'
+        });
+
+        // Filter to return only the assignment relevant to this agency
+        const filteredProjects = projects.map(project => {
+            const relevantAssignment = project.assignments.find(
+                assignment => assignment.agency._id.toString() === req.user.agencyId.toString()
+            );
+            
+            return {
+                _id: project._id,
+                name: project.name,
+                state: project.state,
+                district: project.district,
+                component: project.component,
+                status: project.status,
+                progress: project.progress,
+                budget: project.budget,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                assignment: relevantAssignment, // Only this agency's assignment
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt
+            };
+        });
+
+        res.status(200).json(filteredProjects);
+    } catch (error) {
+        res.status(400).json({ message: "Failed to fetch agency projects", error: error.message });
+    }
+};
+
+// @desc   Update checklist item and recalculate progress
+// @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex
+const updateChecklistItem = async (req, res) => {
+    try {
+        const { projectId, assignmentIndex, checklistIndex } = req.params;
+        const { completed } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Security check: verify this agency owns this assignment
+        const assignment = project.assignments[assignmentIndex];
+        if (assignment.agency.toString() !== req.user.agencyId.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this checklist' });
+        }
+
+        // Update the checklist item
+        assignment.checklist[checklistIndex].completed = completed;
+
+        // Recalculate progress based on completed tasks
+        const completedCount = assignment.checklist.filter(item => item.completed).length;
+        const totalCount = assignment.checklist.length;
+        project.progress = Math.round((completedCount / totalCount) * 100);
+
+        // Update status based on progress
+        if (project.progress === 100) {
+            project.status = 'Completed';
+        } else if (project.progress > 0) {
+            project.status = 'On Track';
+        }
+
+        await project.save();
+
+        res.status(200).json(project);
+    } catch (error) {
+        res.status(400).json({ message: "Failed to update checklist", error: error.message });
+    }
+};
+
+// Export the new functions
+export { 
+    createProject, 
+    getProjects, 
+    getMyStateProjects, 
+    getProjectById, 
+    assignAgency, 
+    addAssignmentsToProject,
+    getMyAgencyProjects,    // Add this
+    updateChecklistItem     // Add this
+};
