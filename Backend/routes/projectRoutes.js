@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { createProject, getProjects,  getMyStateProjects, assignAgency, getProjectById } from '../controllers/projectController.js';
+import { createProject, getProjects,  getMyStateProjects, assignAgency, getProjectById, addAssignmentsToProject  } from '../controllers/projectController.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 
 // Any request to /api/projects will first hit 'protect' middleware
@@ -11,7 +11,9 @@ router.route('/')
 
 router.route('/mystate').get(protect, getMyStateProjects);
 router.route('/:id/assign').put(protect, assignAgency);
-router.route('/:id').get(protect, getProjectById); // <-- Add this new route
+router.route('/:id').get(protect, getProjectById); 
+router.route('/:id/assignments').post(protect, addAssignmentsToProject); // <-- Add this route
+
 
 
 export default router;

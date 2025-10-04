@@ -35,6 +35,8 @@ export default function StateProjectDetail() {
     return <div className="text-center text-muted-foreground">Project not found.</div>;
   }
 
+  const totalAllocated = project.assignments?.reduce((sum, a) => sum + a.allocatedFunds, 0) || 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -50,28 +52,8 @@ export default function StateProjectDetail() {
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
           <div className="flex items-start gap-3"><MapPin className="h-5 w-5 text-primary"/><div className="flex-grow"><p className="font-semibold">State/UT</p><p>{project.state}</p></div></div>
           <div className="flex items-start gap-3"><Building className="h-5 w-5 text-primary"/><div className="flex-grow"><p className="font-semibold">Component</p><p>{project.component}</p></div></div>
-          
-          {/* --- THIS IS THE BUDGET FIX --- */}
-          <div className="flex items-start gap-3">
-            <IndianRupee className="h-5 w-5 text-primary"/>
-            <div className="flex-grow">
-                <p className="font-semibold">Total Budget</p>
-                {/* Use a fallback of 0 in case project.budget is missing */}
-                <p>₹{(project.budget || 0).toLocaleString()} Lakhs</p>
-            </div>
-          </div>
-          
-          {/* --- THIS IS THE TIMELINE FIX --- */}
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-primary"/>
-            <div className="flex-grow">
-                <p className="font-semibold">Timeline</p>
-                {/* Check if dates exist before trying to format them */}
-                <p>
-                    {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} - {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}
-                </p>
-            </div>
-          </div>
+          <div className="flex items-start gap-3"><IndianRupee className="h-5 w-5 text-primary"/><div className="flex-grow"><p className="font-semibold">Total Budget</p><p>₹{(project.budget || 0).toLocaleString()} Lakhs</p></div></div>
+          <div className="flex items-start gap-3"><Calendar className="h-5 w-5 text-primary"/><div className="flex-grow"><p className="font-semibold">Timeline</p><p>{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} - {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}</p></div></div>
         </CardContent>
       </Card>
       
@@ -94,8 +76,8 @@ export default function StateProjectDetail() {
             </div>
           ) : (
             <div className="space-y-6">
-              {project.assignments.map((assignment) => (
-                <div key={assignment.agency._id}>
+              {project.assignments.map((assignment, index) => (
+                <div key={assignment.agency._id || index}>
                   <div className="p-4 border rounded-lg">
                     <div className="flex justify-between items-start">
                         <div>
@@ -122,6 +104,17 @@ export default function StateProjectDetail() {
                   </div>
                 </div>
               ))}
+
+              {project.budget > totalAllocated && (
+                <div className="text-center  mt-6 pt-6 border-t">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Remaining Budget: ₹{(project.budget - totalAllocated).toLocaleString()} Lakhs
+                  </p>
+                  <Button variant="outline" onClick={() => setIsAssignFormOpen(true)}>
+                    Assign Another Agency
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
