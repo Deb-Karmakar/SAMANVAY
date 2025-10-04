@@ -1,3 +1,4 @@
+// Backend/models/projectModel.js
 import mongoose from 'mongoose';
 
 const projectSchema = new mongoose.Schema({
@@ -16,12 +17,9 @@ const projectSchema = new mongoose.Schema({
         default: 'Pending Approval',
     },
     progress: { type: Number, required: true, default: 0 },
-    
-    // --- THESE FIELDS WERE LIKELY MISSING ---
     budget: { type: Number, required: true },
     startDate: { type: Date },
     endDate: { type: Date },
-    // ------------------------------------
 
     assignments: [{
         agency: { 
@@ -35,7 +33,20 @@ const projectSchema = new mongoose.Schema({
         },
         checklist: [{
             text: { type: String, required: true },
-            completed: { type: Boolean, default: false }
+            completed: { type: Boolean, default: false },
+            status: {
+                type: String,
+                enum: ['Not Started', 'Pending Review', 'Approved', 'Rejected'],
+                default: 'Not Started'
+            },
+            proofImages: [{ type: String }], // URLs to uploaded images
+            submittedAt: { type: Date },
+            reviewedAt: { type: Date },
+            reviewedBy: { 
+                type: mongoose.Schema.Types.ObjectId, 
+                ref: 'User'
+            },
+            reviewComments: { type: String }
         }]
     }],
     

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-    LayoutDashboard, Map, Timer, Users, Wallet, MessageSquareWarning, LogOut, Menu, X,
+    LayoutDashboard, Map, Timer, Users, Wallet, MessageSquareWarning, LogOut, Menu, X, Star
 } from 'lucide-react';
 
 // --- Navigation Links for State/UT Nodal Officer ---
@@ -11,9 +11,11 @@ const navLinks = [
     { name: 'Dashboard', path: '/state/dashboard', icon: LayoutDashboard },
     { name: 'State Map View', path: '/state/map', icon: Map },
     { name: 'Project Tracker', path: '/state/projects', icon: Timer },
+    { name: 'Review', path: '/state/reviews', icon: Star },
     { name: 'Executing Agencies', path: '/state/agencies', icon: Users },
     { name: 'Fund Distribution', path: '/state/funds', icon: Wallet },
     { name: 'Communications', path: '/state/communications', icon: MessageSquareWarning },
+
 ];
 
 // --- Main Layout Component ---

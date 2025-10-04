@@ -23,7 +23,8 @@ import StateProjects from "@/pages/state/ProjectsPage";
 import StateAgencies from "@/pages/state/AgenciesPage";
 import StateFunds from "@/pages/state/FundsPage";
 import StateCommunications from "@/pages/state/CommunicationsPage";
-import StateProjectDetail from "@/pages/state/ProjectDetailPage"; // <-- Import the new detail page
+import StateProjectDetail from "@/pages/state/ProjectDetailPage";
+import ReviewsPage from "@/pages/state/ReviewsPage";
 
 
 // 1. Import Agency Layout and Pages
@@ -73,6 +74,7 @@ function Router() {
         <Route path="agencies" element={<StateAgencies />} />
         <Route path="funds" element={<StateFunds />} />
         <Route path="communications" element={<StateCommunications />} />
+        <Route path="reviews" element={<ReviewsPage />} />
       </Route>
 
       {/* 2. Add Executing Agency Nested Routes */}

@@ -215,7 +215,129 @@ const updateChecklistItem = async (req, res) => {
     }
 };
 
-// Export the new functions
+// Backend/controllers/projectController.js
+
+// Replace the old updateChecklistItem with this:
+
+// @desc   Submit milestone for review (with images)
+// @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/submit
+const submitMilestoneForReview = async (req, res) => {
+    try {
+        const { projectId, assignmentIndex, checklistIndex } = req.params;
+        const { proofImages } = req.body; // Array of image URLs
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const assignment = project.assignments[assignmentIndex];
+        if (assignment.agency.toString() !== req.user.agencyId.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const milestone = assignment.checklist[checklistIndex];
+        
+        if (!proofImages || proofImages.length === 0) {
+            return res.status(400).json({ message: 'Please upload at least one proof image' });
+        }
+
+        // Update milestone
+        milestone.proofImages = proofImages;
+        milestone.status = 'Pending Review';
+        milestone.submittedAt = new Date();
+
+        await project.save();
+
+        res.status(200).json(project);
+    } catch (error) {
+        res.status(400).json({ message: "Failed to submit milestone", error: error.message });
+    }
+};
+
+// @desc   Review milestone (approve/reject) - State Officer only
+// @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/review
+const reviewMilestone = async (req, res) => {
+    try {
+        const { projectId, assignmentIndex, checklistIndex } = req.params;
+        const { action, comments } = req.body; // action: 'approve' or 'reject'
+
+        if (req.user.role !== 'StateOfficer') {
+            return res.status(403).json({ message: 'Only state officers can review milestones' });
+        }
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (project.state !== req.user.state) {
+            return res.status(403).json({ message: 'Not authorized for this state' });
+        }
+
+        const assignment = project.assignments[assignmentIndex];
+        const milestone = assignment.checklist[checklistIndex];
+
+        if (milestone.status !== 'Pending Review') {
+            return res.status(400).json({ message: 'This milestone is not pending review' });
+        }
+
+        milestone.reviewedAt = new Date();
+        milestone.reviewedBy = req.user._id;
+        milestone.reviewComments = comments;
+
+        if (action === 'approve') {
+            milestone.status = 'Approved';
+            milestone.completed = true;
+
+            // Recalculate progress
+            const completedCount = assignment.checklist.filter(item => item.completed).length;
+            const totalCount = assignment.checklist.length;
+            project.progress = Math.round((completedCount / totalCount) * 100);
+
+            if (project.progress === 100) {
+                project.status = 'Completed';
+            } else if (project.progress > 0) {
+                project.status = 'On Track';
+            }
+        } else if (action === 'reject') {
+            milestone.status = 'Rejected';
+            milestone.completed = false;
+        }
+
+        await project.save();
+
+        res.status(200).json(project);
+    } catch (error) {
+        res.status(400).json({ message: "Failed to review milestone", error: error.message });
+    }
+};
+
+// @desc   Get projects with pending reviews (for State Officer)
+// @route  GET /api/projects/pending-reviews
+const getProjectsWithPendingReviews = async (req, res) => {
+    try {
+        if (req.user.role !== 'StateOfficer') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const projects = await Project.find({ 
+            state: req.user.state,
+            'assignments.checklist.status': 'Pending Review'
+        }).populate({
+            path: 'assignments.agency',
+            select: 'name'
+        });
+
+        res.status(200).json(projects);
+    } catch (error) {
+        res.status(400).json({ message: "Failed to fetch projects", error: error.message });
+    }
+};
+
+// Update exports
 export { 
     createProject, 
     getProjects, 
@@ -223,6 +345,9 @@ export {
     getProjectById, 
     assignAgency, 
     addAssignmentsToProject,
-    getMyAgencyProjects,    // Add this
-    updateChecklistItem     // Add this
+    getMyAgencyProjects,
+    submitMilestoneForReview,
+    reviewMilestone,
+    getProjectsWithPendingReviews,
+    updateChecklistItem // Add this line
 };
