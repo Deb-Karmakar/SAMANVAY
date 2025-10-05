@@ -15,6 +15,7 @@ import AdminAgencies from "@/pages/admin/AgenciesPage";
 import AdminProjects from "@/pages/admin/ProjectsPage";
 import AdminReports from "@/pages/admin/ReportsPage";
 import CommunicationsPage from "@/pages/admin/CommunicationsPage";
+import AdminProjectDetail from '@/pages/admin/ProjectDetailPage';
 
 // State Layout and Page Imports
 import StateLayout from "@/components/layouts/StateLayout";
@@ -64,6 +65,7 @@ function Router() {
         <Route path="projects" element={<AdminProjects />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="communications" element={<CommunicationsPage />} />
+        <Route path="/admin/projects/:projectId" element={<AdminProjectDetail />} />
       </Route>
 
       {/* State Officer Nested Routes */}
