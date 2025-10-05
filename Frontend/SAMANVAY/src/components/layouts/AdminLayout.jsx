@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import {
-    LayoutDashboard, Map, Bell, Landmark, BookUser, Timer, BarChart3, LogOut, Menu, X, User,
+    LayoutDashboard, Map, Bell, Landmark, BookUser, Timer, BarChart3, LogOut, Menu, X, User, MessageSquareWarning
 } from 'lucide-react';
 
 // --- Navigation Links (unchanged) ---
@@ -17,6 +17,7 @@ const navLinks = [
     { name: 'Agency Directory', path: '/admin/agencies', icon: BookUser },
     { name: 'Project Tracker', path: '/admin/projects', icon: Timer },
     { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
+    { name: 'Communications', path: '/admin/communications', icon: MessageSquareWarning },
 ];
 
 // --- Helper function to get initials from a name ---

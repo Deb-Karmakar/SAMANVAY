@@ -1,7 +1,6 @@
+// Backend/controllers/agencyController.js
 import Agency from '../models/agencyModel.js';
 
-// @desc   Create a new agency
-// @route  POST /api/agencies
 const createAgency = async (req, res) => {
     try {
         const agency = new Agency(req.body);
@@ -12,8 +11,6 @@ const createAgency = async (req, res) => {
     }
 };
 
-// @desc   Get all agencies
-// @route  GET /api/agencies
 const getAgencies = async (req, res) => {
     try {
         const agencies = await Agency.find({});
@@ -23,17 +20,27 @@ const getAgencies = async (req, res) => {
     }
 };
 
-// @desc   Get agencies for the logged-in state officer's state
-// @route  GET /api/agencies/mystate
+// Backend/controllers/agencyController.js
 const getMyStateAgencies = async (req, res) => {
     try {
-        // req.user is available from our 'protect' middleware
-        const agencies = await Agency.find({ state: req.user.state, type: 'Executing' });
+        console.log('Fetching agencies for state:', req.user.state);
+        
+        const agencies = await Agency.find({ 
+            state: req.user.state
+        });
+        
+        console.log('Found agencies:', agencies.length);
+        console.log('Agency details:', agencies.map(a => ({ 
+            name: a.name, 
+            state: a.state, 
+            status: a.status 
+        })));
+        
         res.status(200).json(agencies);
     } catch (error) {
+        console.error('Error fetching agencies:', error);
         res.status(400).json({ message: "Failed to fetch state agencies", error: error.message });
     }
 };
 
-export { createAgency, getAgencies, getMyStateAgencies }; // Add to exports
-
+export { createAgency, getAgencies, getMyStateAgencies };

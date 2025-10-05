@@ -1,4 +1,3 @@
-// Frontend/src/pages/agency/ProjectDetailPage.jsx
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,11 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Loader2, Upload, X, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/contexts/AuthContext";
+import { formatBudget } from "@/components/BudgetDisplay";
 
 const fetchProjectDetails = async (projectId) => {
     const { data } = await axiosInstance.get(`/projects/${projectId}`);
@@ -21,9 +20,8 @@ const fetchProjectDetails = async (projectId) => {
 const uploadImage = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
-    // Replace with your actual image upload endpoint
     const { data } = await axiosInstance.post('/upload/image', formData);
-    return data.url; // Assumes endpoint returns { url: 'https://...' }
+    return data.url;
 };
 
 const submitMilestone = async ({ projectId, assignmentIndex, checklistIndex, proofImages }) => {
@@ -141,8 +139,8 @@ export default function AgencyProjectDetail() {
                         <p>{project.component}</p>
                     </div>
                     <div>
-                        <p className="font-semibold">Budget</p>
-                        <p>₹{(project.budget / 100000).toFixed(2)} Lakhs</p>
+                        <p className="font-semibold">Your Allocated Budget</p>
+                        <p>{formatBudget(myAssignment?.allocatedFunds || 0)}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -222,7 +220,6 @@ export default function AgencyProjectDetail() {
                 </CardContent>
             </Card>
 
-            {/* Upload Dialog */}
             <Dialog open={selectedMilestone !== null} onOpenChange={(open) => !open && setSelectedMilestone(null)}>
                 <DialogContent>
                     <DialogHeader>

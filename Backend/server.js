@@ -6,6 +6,14 @@ import agencyRoutes from './routes/agencyRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import communicationRoutes from './routes/communicationRoutes.js';
+import testRoutes from './routes/testRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 // ✅ Load .env only in development
 if (process.env.NODE_ENV !== 'production') {
@@ -38,6 +46,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/communications', communicationRoutes);
+app.use('/api/test', testRoutes);
+app.use('/uploads/pdfs', express.static(path.join(__dirname, 'uploads/pdfs')));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

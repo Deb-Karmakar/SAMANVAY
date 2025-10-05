@@ -14,15 +14,29 @@ const fetchStateAgencies = async () => {
     return data;
 };
 
-// 1. Update the API function to accept the checklist
 const assignAgencyToProject = async ({ projectId, assignments }) => {
     const { data } = await axiosInstance.post(`/projects/${projectId}/assignments`, { assignments });
     return data;
 };
 
+// --- Utility function to download PDF ---
+const downloadPDF = (url, filename) => {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(link.href);
+        })
+        .catch(error => console.error('Download failed:', error));
+};
+
 export default function AssignAgencyDialog({ project, open, onOpenChange }) {
   const [selectedAgency, setSelectedAgency] = useState('');
-  // 2. Add state for the checklist and the input field
   const [milestones, setMilestones] = useState([]);
   const [newMilestone, setNewMilestone] = useState('');
   const queryClient = useQueryClient();
@@ -35,22 +49,41 @@ export default function AssignAgencyDialog({ project, open, onOpenChange }) {
 
   const mutation = useMutation({
     mutationFn: assignAgencyToProject,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate queries to refresh the lists
       queryClient.invalidateQueries({ queryKey: ['myStateProjects'] });
+      
+      // Auto-download PDF if available
+      if (data.pdf) {
+        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/', '') || 'http://localhost:8000';
+        downloadPDF(`${baseUrl}${data.pdf.url}`, data.pdf.filename);
+      }
+      
+      // Reset form state
+      setSelectedAgency('');
+      setMilestones([]);
+      setNewMilestone('');
+      
       onOpenChange(false);
-      alert("Agency and milestones assigned successfully!");
+      
+      // Show success message
+      alert(
+        `Agency assigned successfully!\n\n` +
+        `✓ Assignment order has been downloaded\n` +
+        `✓ Email notifications sent to all assigned agencies\n\n` +
+        `Agencies can now log in to view their milestones and begin work.`
+      );
     },
     onError: (error) => {
       alert(`Failed to assign agency: ${error.response?.data?.message || error.message}`);
     },
   });
 
-  // 3. Functions to manage the milestones list
+  // Functions to manage the milestones list
   const handleAddMilestone = () => {
     if (newMilestone.trim() !== '') {
-      // Add milestones as objects to match the backend schema
       setMilestones([...milestones, { text: newMilestone.trim() }]);
-      setNewMilestone(''); // Clear the input field
+      setNewMilestone('');
     }
   };
   
@@ -58,61 +91,117 @@ export default function AssignAgencyDialog({ project, open, onOpenChange }) {
     setMilestones(milestones.filter((_, index) => index !== indexToRemove));
   };
 
-  // 4. Update the final submission handler
-const handleAssign = () => {
-    if (!selectedAgency || milestones.length === 0) {
-        alert("Please select an agency and add at least one milestone.");
-        return;
+  const handleAssign = () => {
+    if (!selectedAgency) {
+      alert("Please select an agency.");
+      return;
+    }
+    
+    if (milestones.length === 0) {
+      alert("Please add at least one milestone.");
+      return;
     }
     
     const assignments = [{
-        agency: selectedAgency,
-        allocatedFunds: 0, // You can add a field for this if needed
-        checklist: milestones
+      agency: selectedAgency,
+      allocatedFunds: 0,
+      checklist: milestones
     }];
     
     mutation.mutate({ projectId: project._id, assignments });
-};
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Assign Project: {project.name}</DialogTitle>
-          <DialogDescription>Select an agency and define the key milestones for this project.</DialogDescription>
+          <DialogDescription>
+            Select an agency and define the key milestones for this project.
+          </DialogDescription>
         </DialogHeader>
+        
         <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-6 -mr-6">
           <div className="space-y-2">
             <Label>1. Select Executing Agency</Label>
-            <Select onValueChange={setSelectedAgency} disabled={isLoading}>
+            <Select onValueChange={setSelectedAgency} disabled={isLoading} value={selectedAgency}>
               <SelectTrigger>
                 <SelectValue placeholder={isLoading ? "Loading agencies..." : "Select an agency..."} />
               </SelectTrigger>
-              <SelectContent>{agencies?.map(agency => (<SelectItem key={agency._id} value={agency._id}>{agency.name}</SelectItem>))}</SelectContent>
+              <SelectContent>
+                {agencies?.map(agency => (
+                  <SelectItem key={agency._id} value={agency._id}>
+                    {agency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           
-          {/* 5. Add the new UI for the milestone editor */}
           <div className="space-y-2">
             <Label>2. Define Project Milestones (Checklist)</Label>
             <div className="flex gap-2">
-              <Input value={newMilestone} onChange={(e) => setNewMilestone(e.target.value)} placeholder="e.g., Site Clearance and Levelling" />
-              <Button type="button" onClick={handleAddMilestone}><Plus className="mr-2 h-4 w-4" /> Add</Button>
+              <Input 
+                value={newMilestone} 
+                onChange={(e) => setNewMilestone(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddMilestone();
+                  }
+                }}
+                placeholder="e.g., Site Clearance and Levelling" 
+              />
+              <Button type="button" onClick={handleAddMilestone}>
+                <Plus className="mr-2 h-4 w-4" /> Add
+              </Button>
             </div>
+            
             <div className="mt-4 space-y-2">
-              {milestones.map((milestone, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm">
-                  <span>{milestone.text}</span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveMilestone(index)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+              {milestones.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No milestones added yet. Add milestones to define project phases.
+                </p>
+              ) : (
+                milestones.map((milestone, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between p-3 bg-muted rounded-md text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-muted-foreground">
+                        {index + 1}.
+                      </span>
+                      <span>{milestone.text}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      onClick={() => handleRemoveMilestone(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
-        <Button onClick={handleAssign} disabled={mutation.isLoading} className="mt-4">
-          {mutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirm Assignment"}
+        
+        <Button 
+          onClick={handleAssign} 
+          disabled={mutation.isLoading || !selectedAgency || milestones.length === 0} 
+          className="mt-4"
+        >
+          {mutation.isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              Assigning...
+            </>
+          ) : (
+            "Confirm Assignment"
+          )}
         </Button>
       </DialogContent>
     </Dialog>

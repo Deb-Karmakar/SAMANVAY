@@ -130,7 +130,7 @@ export function Signup() {
                                 <Select name="agencyType" required>
                                     <SelectTrigger><SelectValue placeholder="Select agency type..." /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="PWD">PWD</SelectItem><SelectItem value="NGO">NGO</SelectItem><SelectItem value="Education Dept">Education Dept.</SelectItem><SelectItem value="Others">Others</SelectItem>
+                                        <SelectItem value="PWD">PWD</SelectItem><SelectItem value="NGO">NGO</SelectItem><SelectItem value="Others">Others</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

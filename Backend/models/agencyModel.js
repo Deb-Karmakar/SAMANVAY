@@ -1,3 +1,4 @@
+// Backend/models/agencyModel.js
 import mongoose from 'mongoose';
 
 const agencySchema = new mongoose.Schema({
@@ -5,7 +6,6 @@ const agencySchema = new mongoose.Schema({
     type: { 
         type: String, 
         required: true,
-        enum: ['Implementing', 'Executing'] 
     },
     state: { type: String, required: true },
     district: { type: String, required: true },
@@ -16,7 +16,6 @@ const agencySchema = new mongoose.Schema({
         default: 'Active',
         enum: ['Active', 'Onboarding', 'Inactive']
     },
-    // We can add more details later, like a reference to the user who created it
 }, { timestamps: true });
 
 const Agency = mongoose.model('Agency', agencySchema);

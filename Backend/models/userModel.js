@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         enum: ['CentralAdmin', 'StateOfficer', 'ExecutingAgency'] 
     },
-    isActive: { type: Boolean, default: false }, // Accounts are inactive until approved
+    isActive: { type: Boolean, default: true }, // Accounts are inactive until approved
 
     // --- Role-Specific Fields ---
     // For Central Admin
