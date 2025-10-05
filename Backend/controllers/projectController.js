@@ -128,18 +128,47 @@ const getMyStateProjects = async (req, res) => {
 
 // @desc   Get a single project by ID
 // @route  GET /api/projects/:id
+// Backend/controllers/projectController.js
+
 const getProjectById = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id).populate({
-            path: 'assignments',
-            populate: { path: 'agency', select: 'name' }
+            path: 'assignments.agency',
+            select: 'name'
         });
 
-        if (project) {
-            res.status(200).json(project);
-        } else {
-            res.status(404).json({ message: 'Project not found' });
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
         }
+
+        // If the user is an ExecutingAgency, filter to show only their assignment
+        if (req.user.role === 'ExecutingAgency') {
+            const relevantAssignment = project.assignments.find(
+                assignment => assignment.agency._id.toString() === req.user.agencyId.toString()
+            );
+            
+            const filteredProject = {
+                _id: project._id,
+                name: project.name,
+                state: project.state,
+                district: project.district,
+                component: project.component,
+                status: project.status,
+                progress: project.progress,
+                budget: project.budget,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                assignment: relevantAssignment, // Single assignment for this agency
+                assignments: [relevantAssignment], // Also as array for compatibility
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt
+            };
+            
+            return res.status(200).json(filteredProject);
+        }
+
+        // For state officers and admins, return full project with all assignments
+        res.status(200).json(project);
     } catch (error) {
         res.status(400).json({ message: "Failed to fetch project", error: error.message });
     }
@@ -305,10 +334,15 @@ const getMyAgencyProjects = async (req, res) => {
 
 // @desc   Submit milestone for review (with images)
 // @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/submit
+// Backend/controllers/projectController.js
+
 const submitMilestoneForReview = async (req, res) => {
     try {
         const { projectId, assignmentIndex, checklistIndex } = req.params;
         const { proofImages } = req.body;
+
+        console.log('📝 Submitting milestone:', { projectId, assignmentIndex, checklistIndex });
+        console.log('👤 User agencyId:', req.user.agencyId);
 
         const project = await Project.findById(projectId).populate('assignments.agency');
 
@@ -317,7 +351,15 @@ const submitMilestoneForReview = async (req, res) => {
         }
 
         const assignment = project.assignments[assignmentIndex];
-        if (assignment.agency._id.toString() !== req.user.agencyId.toString()) {
+        
+        // Fix: Handle both populated and non-populated agency
+        const assignmentAgencyId = assignment.agency._id || assignment.agency;
+        
+        console.log('🏢 Assignment agencyId:', assignmentAgencyId.toString());
+        console.log('✅ Match:', assignmentAgencyId.toString() === req.user.agencyId.toString());
+
+        if (assignmentAgencyId.toString() !== req.user.agencyId.toString()) {
+            console.error('❌ Authorization failed - Agency mismatch');
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -375,6 +417,7 @@ const submitMilestoneForReview = async (req, res) => {
 
         res.status(200).json(project);
     } catch (error) {
+        console.error('❌ Failed to submit milestone:', error);
         res.status(400).json({ message: "Failed to submit milestone", error: error.message });
     }
 };
