@@ -59,7 +59,6 @@ const navLinks = [
         name: 'Projects', 
         path: '/state/projects', 
         icon: Timer,
-        badge: '12',
         badgeVariant: 'secondary',
         description: 'Track Progress'
     },
@@ -67,7 +66,6 @@ const navLinks = [
         name: 'Reviews', 
         path: '/state/reviews', 
         icon: Star,
-        badge: '5',
         badgeVariant: 'destructive',
         description: 'Pending Reviews'
     },
@@ -82,7 +80,6 @@ const navLinks = [
         name: 'Funds', 
         path: '/state/funds', 
         icon: Wallet,
-        badge: 'New',
         badgeVariant: 'default',
         description: 'Fund Distribution'
     },
@@ -90,7 +87,6 @@ const navLinks = [
         name: 'Messages', 
         path: '/state/communications', 
         icon: MessageSquareWarning,
-        badge: '3',
         badgeVariant: 'default',
         description: 'Communications'
     },

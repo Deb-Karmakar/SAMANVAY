@@ -53,7 +53,7 @@ const navLinks = [
         name: 'Projects', 
         path: '/agency/projects', 
         icon: ClipboardList,
-        badge: '8',
+        badge: null,
         badgeVariant: 'secondary',
         description: 'Manage Projects'
     },
@@ -68,7 +68,7 @@ const navLinks = [
         name: 'Funds', 
         path: '/agency/funds', 
         icon: Wallet,
-        badge: 'New',
+        badge: null,
         badgeVariant: 'default',
         description: 'Financial Status'
     },
@@ -76,7 +76,7 @@ const navLinks = [
         name: 'Inbox', 
         path: '/agency/inbox', 
         icon: Bell,
-        badge: '4',
+        badge: null,
         badgeVariant: 'destructive',
         description: 'Messages & Alerts'
     },
@@ -344,21 +344,6 @@ const Header = ({ onMenuClick, isSearchOpen, setIsSearchOpen }) => {
                                 </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
-
-                        {/* Project Status Indicator */}
-                        <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                            <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                <span className="text-xs text-muted-foreground">5 Active</span>
-                            </div>
-                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
-                            <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-amber-500 rounded-full" />
-                                <span className="text-xs text-muted-foreground">2 Pending</span>
-                            </div>
-                        </div>
-
-
 
                         {/* User Menu - Desktop Only */}
                         {userInfo && (

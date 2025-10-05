@@ -57,7 +57,7 @@ const navLinks = [
         name: 'Alerts', 
         path: '/admin/alerts', 
         icon: Bell,
-        badge: '3',
+        badge: null,
         badgeVariant: 'destructive',
         description: 'Notifications & Updates'
     },
@@ -72,7 +72,7 @@ const navLinks = [
         name: 'Agencies', 
         path: '/admin/agencies', 
         icon: BookUser,
-        badge: 'New',
+        badge: null,
         badgeVariant: 'secondary',
         description: 'Agency Directory'
     },
@@ -94,7 +94,7 @@ const navLinks = [
         name: 'Messages', 
         path: '/admin/communications', 
         icon: MessageSquareWarning,
-        badge: '5',
+        badge: null,
         badgeVariant: 'default',
         description: 'Communication Hub'
     },
