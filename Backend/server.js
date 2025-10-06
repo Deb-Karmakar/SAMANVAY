@@ -9,6 +9,8 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import communicationRoutes from './routes/communicationRoutes.js';
 import testRoutes from './routes/testRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
+import fundRoutes from './routes/fundRoutes.js'
+
 import { startAlertCron } from './services/cronService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -46,6 +48,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/agencies', agencyRoutes);
 app.use('/api/dashboard', dashboardRoutes); 
 app.use('/api/projects', projectRoutes);
+app.use('/api/funds', fundRoutes); 
 app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/communications', communicationRoutes);
