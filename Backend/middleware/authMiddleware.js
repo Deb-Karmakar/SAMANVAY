@@ -1,32 +1,30 @@
+// Backend/middleware/authMiddleware.js (Updated)
+
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
+import asyncHandler from 'express-async-handler'; // Recommended for error handling
 
-const protect = async (req, res, next) => {
+const protect = asyncHandler(async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
-            // Get token from header
             token = req.headers.authorization.split(' ')[1];
-
-            // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // Get user from the token and attach it to the request object
             req.user = await User.findById(decoded.userId).select('-password');
-
-            next(); // Move to the next piece of middleware or the controller
+            next();
         } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            res.status(401);
+            throw new Error('Not authorized, token failed');
         }
     }
 
     if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+        res.status(401);
+        throw new Error('Not authorized, no token');
     }
-};
+});
 
-// Middleware to check for Admin role
 const isAdmin = (req, res, next) => {
     if (req.user && req.user.role === 'CentralAdmin') {
         next();
@@ -35,4 +33,21 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-export { protect, isAdmin };
+// --- NEW MIDDLEWARE ---
+const isStateOfficer = (req, res, next) => {
+    if (req.user && req.user.role === 'StateOfficer' && req.user.state) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Not authorized as a state officer' });
+    }
+};
+ const isExecutingAgency = (req, res, next) => {
+    if (req.user && req.user.role === 'ExecutingAgency' && req.user.agencyId) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Not authorized as an executing agency' });
+    }
+};
+
+// Update the exports at the bottom of the file
+export { protect, isAdmin, isStateOfficer, isExecutingAgency };

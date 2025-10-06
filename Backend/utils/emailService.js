@@ -200,6 +200,66 @@ const emailTemplates = {
                 </p>
             </div>
         `
+    }),
+    utilizationReportSubmitted: (stateOfficerName, agencyName, projectName, amount, reportId) => ({
+        subject: `[ACTION REQUIRED] Utilization Report Submitted by ${agencyName}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #f59e0b;">New Utilization Report Submitted</h2>
+                <p>Dear ${stateOfficerName},</p>
+                <p><strong>${agencyName}</strong> has submitted a new fund utilization report that requires your approval.</p>
+                
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">Report Details:</h3>
+                    <p><strong>Project:</strong> ${projectName}</p>
+                    <p><strong>Agency:</strong> ${agencyName}</p>
+                    <p><strong>Amount Utilized:</strong> ₹${(amount / 100000).toFixed(2)} Lakhs</p>
+                </div>
+
+                <p>Please log in to the SAMANVAY platform to review the submitted certificate and approve or reject the report.</p>
+                
+                <a href="${process.env.FRONTEND_URL}/state/reviews" 
+                   style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0;">
+                   Review Report
+                </a>
+                
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 12px;">This is an automated message from SAMANVAY.</p>
+            </div>
+        `
+    }),
+     utilizationReportReviewed: (agencyName, projectName, amount, status, reviewComments) => ({
+        subject: `Update: Your Utilization Report for ${projectName} has been ${status}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: ${status === 'Approved' ? '#16a34a' : '#dc2626'};">
+                    Utilization Report ${status}
+                </h2>
+                <p>Dear ${agencyName},</p>
+                <p>Your submitted utilization report has been reviewed by the State Nodal Officer.</p>
+                
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">Submission Details:</h3>
+                    <p><strong>Project:</strong> ${projectName}</p>
+                    <p><strong>Amount:</strong> ₹${(amount / 100000).toFixed(2)} Lakhs</p>
+                    <p><strong>New Status:</strong> ${status}</p>
+                </div>
+
+                ${reviewComments ? `
+                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h4 style="margin-top: 0;">Reviewer's Comments:</h4>
+                        <p>${reviewComments}</p>
+                    </div>
+                ` : ''}
+
+                <p>${status === 'Approved' ? 'The utilized funds have been recorded.' : 'Please address the comments and contact the State Officer if you have questions.'}</p>
+                
+                <a href="${process.env.FRONTEND_URL}/agency/funds" 
+                   style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0;">
+                   View Fund Status
+                </a>
+            </div>
+        `
     })
 };
 
