@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AlertsPage from '@/pages/shared/AlertsPage';
 
 // Admin Layout and Page Imports
 import AdminLayout from "@/components/layouts/AdminLayout";
@@ -66,6 +67,7 @@ function Router() {
         <Route path="reports" element={<AdminReports />} />
         <Route path="communications" element={<CommunicationsPage />} />
         <Route path="/admin/projects/:projectId" element={<AdminProjectDetail />} />
+        <Route path="/admin/alerts" element={<AlertsPage />} />
       </Route>
 
       {/* State Officer Nested Routes */}
@@ -79,6 +81,7 @@ function Router() {
         <Route path="funds" element={<StateFunds />} />
         <Route path="communications" element={<StateCommunications />} />
         <Route path="reviews" element={<ReviewsPage />} />
+        <Route path="/state/alerts" element={<AlertsPage />} />
       </Route>
 
       {/* 2. Add Executing Agency Nested Routes */}
@@ -90,6 +93,7 @@ function Router() {
         <Route path="map" element={<AgencyMap />} />
         <Route path="funds" element={<AgencyFunds />} />
         <Route path="inbox" element={<AgencyInbox />} />
+        <Route path="/agency/alerts" element={<AlertsPage />} />
       </Route>
 
       {/* Catch-all Not Found Route */}

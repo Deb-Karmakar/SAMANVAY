@@ -8,6 +8,8 @@ import projectRoutes from './routes/projectRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import communicationRoutes from './routes/communicationRoutes.js';
 import testRoutes from './routes/testRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
+import { startAlertCron } from './services/cronService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -49,8 +51,10 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/communications', communicationRoutes);
 app.use('/api/test', testRoutes);
 app.use('/uploads/pdfs', express.static(path.join(__dirname, 'uploads/pdfs')));
+app.use('/api/alerts', alertRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
+  startAlertCron();
 });

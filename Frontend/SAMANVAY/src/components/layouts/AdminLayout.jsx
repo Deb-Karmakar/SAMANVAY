@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import AlertDropdown from '@/components/alerts/AlertDropdown';
+
 import { 
     DropdownMenu, 
     DropdownMenuContent, 
@@ -262,6 +264,7 @@ const Sidebar = () => {
 };
 
 // --- Header Component ---
+// --- Header Component ---
 const Header = ({ onMenuClick, isSearchOpen, setIsSearchOpen }) => {
     const location = useLocation();
     const { userInfo, logout } = useAuth();
@@ -302,35 +305,8 @@ const Header = ({ onMenuClick, isSearchOpen, setIsSearchOpen }) => {
                             <Search className="w-5 h-5" />
                         </Button>
 
-                        {/* Notifications */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="relative">
-                                    <Bell className="w-5 h-5" />
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-80">
-                                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <div className="max-h-96 overflow-y-auto">
-                                    <DropdownMenuItem className="flex flex-col items-start py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="destructive" className="text-xs">Urgent</Badge>
-                                            <span className="text-xs text-muted-foreground">2 mins ago</span>
-                                        </div>
-                                        <p className="text-sm mt-1">Fund approval pending for Project #234</p>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="flex flex-col items-start py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Badge className="text-xs">Update</Badge>
-                                            <span className="text-xs text-muted-foreground">1 hour ago</span>
-                                        </div>
-                                        <p className="text-sm mt-1">New agency registered in Maharashtra</p>
-                                    </DropdownMenuItem>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* Alert Dropdown Component - Replacing mock notifications */}
+                        <AlertDropdown />
 
                         {/* User Menu - Desktop Only */}
                         {userInfo && (
