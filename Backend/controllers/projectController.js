@@ -1,10 +1,12 @@
 // Backend/controllers/projectController.js
+import Alert from '../models/alertModel.js'; // <-- 1. IMPORT ADDED
 import Project from '../models/projectModel.js';
 import User from '../models/userModel.js';
 import Agency from '../models/agencyModel.js';
 import { sendEmail, emailTemplates } from '../utils/emailService.js';
 import { generateProjectApprovalPDF, generateAssignmentOrderPDF } from '../utils/pdfService.js';
 import CommunicationLog from '../models/communicationLogModel.js';
+import asyncHandler from 'express-async-handler'; // Recommended for cleaner async/await
 
 // @desc   Create a new project
 // @route  POST /api/projects
@@ -128,8 +130,6 @@ const getMyStateProjects = async (req, res) => {
 
 // @desc   Get a single project by ID
 // @route  GET /api/projects/:id
-// Backend/controllers/projectController.js
-
 const getProjectById = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id).populate({
@@ -334,8 +334,6 @@ const getMyAgencyProjects = async (req, res) => {
 
 // @desc   Submit milestone for review (with images)
 // @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/submit
-// Backend/controllers/projectController.js
-
 const submitMilestoneForReview = async (req, res) => {
     try {
         const { projectId, assignmentIndex, checklistIndex } = req.params;
@@ -424,98 +422,116 @@ const submitMilestoneForReview = async (req, res) => {
 
 // @desc   Review milestone (approve/reject) - State Officer only
 // @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/review
-const reviewMilestone = async (req, res) => {
-    try {
-        const { projectId, assignmentIndex, checklistIndex } = req.params;
-        const { action, comments } = req.body;
+const reviewMilestone = asyncHandler(async (req, res) => {
+    const { projectId, assignmentIndex, checklistIndex } = req.params;
+    const { action, comments } = req.body;
 
-        if (req.user.role !== 'StateOfficer') {
-            return res.status(403).json({ message: 'Only state officers can review' });
-        }
-
-        const project = await Project.findById(projectId).populate('assignments.agency');
-
-        if (!project || project.state !== req.user.state) {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
-
-        const assignment = project.assignments[assignmentIndex];
-        const milestone = assignment.checklist[checklistIndex];
-
-        if (milestone.status !== 'Pending Review') {
-            return res.status(400).json({ message: 'Not pending review' });
-        }
-
-        milestone.reviewedAt = new Date();
-        milestone.reviewedBy = req.user._id;
-        milestone.reviewComments = comments;
-
-        if (action === 'approve') {
-            milestone.status = 'Approved';
-            milestone.completed = true;
-
-            const completedCount = assignment.checklist.filter(item => item.completed).length;
-            project.progress = Math.round((completedCount / assignment.checklist.length) * 100);
-
-            if (project.progress === 100) {
-                project.status = 'Completed';
-            } else if (project.progress > 0) {
-                project.status = 'On Track';
-            }
-        } else if (action === 'reject') {
-            milestone.status = 'Rejected';
-            milestone.completed = false;
-        }
-
-        await project.save();
-
-        // Send email to agency
-        const agencyUser = await User.findOne({
-            role: 'ExecutingAgency',
-            agencyId: assignment.agency._id,
-            isActive: true
-        });
-
-        if (agencyUser) {
-            const emailContent = emailTemplates.milestoneReviewed(
-                project.name,
-                milestone.text,
-                action === 'approve',
-                comments,
-                project._id
-            );
-
-            try {
-                await sendEmail({
-                    to: agencyUser.email,
-                    subject: emailContent.subject,
-                    html: emailContent.html
-                });
-
-                await CommunicationLog.create({
-                    type: 'email',
-                    event: 'milestone_reviewed',
-                    project: project._id,
-                    sender: req.user._id,
-                    recipient: {
-                        email: agencyUser.email,
-                        userId: agencyUser._id
-                    },
-                    subject: emailContent.subject,
-                    status: 'sent',
-                    metadata: { action, milestone: milestone.text },
-                    sentAt: new Date()
-                });
-            } catch (emailError) {
-                console.error('Email failed:', emailError);
-            }
-        }
-
-        res.status(200).json(project);
-    } catch (error) {
-        res.status(400).json({ message: "Failed to review milestone", error: error.message });
+    if (req.user.role !== 'StateOfficer') {
+        res.status(403);
+        throw new Error('Only state officers can review');
     }
-};
+
+    const project = await Project.findById(projectId).populate('assignments.agency');
+
+    if (!project || project.state !== req.user.state) {
+        res.status(403);
+        throw new Error('Not authorized for this project');
+    }
+
+    const assignment = project.assignments[assignmentIndex];
+    const milestone = assignment.checklist[checklistIndex];
+
+    if (milestone.status !== 'Pending Review') {
+        res.status(400);
+        throw new Error('This milestone is not pending review.');
+    }
+
+    milestone.reviewedAt = new Date();
+    milestone.reviewedBy = req.user._id;
+    milestone.reviewComments = comments;
+
+    if (action === 'approve') {
+        milestone.status = 'Approved';
+        milestone.completed = true;
+    } else if (action === 'reject') {
+        milestone.status = 'Rejected';
+        milestone.completed = false;
+    } else {
+        res.status(400);
+        throw new Error('Invalid action. Must be "approve" or "reject".');
+    }
+    
+    // Recalculate project progress based on ALL assignments
+    let totalMilestones = 0;
+    let completedMilestones = 0;
+    project.assignments.forEach(ass => {
+        totalMilestones += ass.checklist.length;
+        completedMilestones += ass.checklist.filter(item => item.completed).length;
+    });
+
+    if (totalMilestones > 0) {
+        project.progress = Math.round((completedMilestones / totalMilestones) * 100);
+    }
+
+    if (project.progress === 100) {
+        project.status = 'Completed';
+    } else if (project.progress > 0) {
+        project.status = 'On Track';
+    }
+
+    await project.save();
+
+    // --- 2. ALERT CREATION LOGIC ADDED ---
+    // Create an in-app alert for the submitting agency
+    await Alert.create({
+        type: 'milestone_reviewed',
+        severity: 'info',
+        project: project._id,
+        agency: assignment.agency._id,
+        message: `Your milestone "${milestone.text}" for "${project.name}" was ${milestone.status}. ${comments || ''}`,
+        metadata: { status: milestone.status, comments: comments }
+    });
+
+    // Send email to agency
+    const agencyUser = await User.findOne({
+        role: 'ExecutingAgency',
+        agencyId: assignment.agency._id,
+        isActive: true
+    });
+
+    if (agencyUser) {
+        const emailContent = emailTemplates.milestoneReviewed(
+            project.name,
+            milestone.text,
+            action === 'approve',
+            comments,
+            project._id
+        );
+
+        try {
+            await sendEmail({ to: agencyUser.email, ...emailContent });
+
+            await CommunicationLog.create({
+                type: 'email',
+                event: 'milestone_reviewed',
+                project: project._id,
+                sender: req.user._id,
+                recipient: {
+                    email: agencyUser.email,
+                    userId: agencyUser._id
+                },
+                subject: emailContent.subject,
+                status: 'sent',
+                metadata: { action, milestone: milestone.text },
+                sentAt: new Date()
+            });
+        } catch (emailError) {
+            console.error('Email failed:', emailError);
+        }
+    }
+
+    res.status(200).json(project);
+});
 
 // @desc   Get projects with pending reviews (for State Officer)
 // @route  GET /api/projects/pending-reviews

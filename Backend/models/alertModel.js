@@ -6,15 +6,17 @@ const alertSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: [
-            'deadline_approaching',
-            'inactive_project',
-            'behind_schedule',
-            'high_rejection_rate',
-            'slow_review',
-            'budget_overrun',
-            'milestone_overdue',
-            'consecutive_rejections'
-        ]
+            // Existing types
+            'deadline_approaching', 'inactive_project', 'behind_schedule',
+            'high_rejection_rate', 'slow_review', 'budget_overrun',
+            'consecutive_rejections',
+            
+            // --- NEW AGENCY-SPECIFIC TYPES ---
+            'milestone_due_soon',     // For upcoming milestone deadlines
+            'milestone_overdue',      // For past-due milestones
+            'milestone_reviewed',     // Notification that a milestone was approved/rejected
+            'utilization_reviewed'  // Notification that a utilization report was approved/rejected
+        ]
     },
     severity: {
         type: String,

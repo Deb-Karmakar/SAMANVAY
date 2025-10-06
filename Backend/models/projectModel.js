@@ -1,6 +1,4 @@
 // Backend/models/projectModel.js
-import mongoose from 'mongoose';
-
 const projectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     state: { type: String, required: true },

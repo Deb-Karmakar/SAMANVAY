@@ -32,10 +32,6 @@ import {
     Activity,
     TrendingUp,
     FileText,
-    Building2,
-    Clock,
-    CheckCircle2,
-    AlertCircle,
     Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -73,8 +69,8 @@ const navLinks = [
         description: 'Financial Status'
     },
     { 
-        name: 'Inbox', 
-        path: '/agency/inbox', 
+        name: 'Alerts', 
+        path: '/agency/alerts', 
         icon: Bell,
         badge: null,
         badgeVariant: 'destructive',
@@ -477,9 +473,6 @@ const MobileSidebar = ({ isOpen, setIsOpen }) => {
                             <div>
                                 <p className="font-semibold">{userInfo.fullName}</p>
                                 <p className="text-xs text-muted-foreground">Agency Officer</p>
-                                <Badge variant="outline" className="mt-1 text-xs">
-                                    ID: {userInfo.agencyId || 'AG-2024-001'}
-                                </Badge>
                             </div>
                         </div>
                     </div>

@@ -84,6 +84,13 @@ const navLinks = [
         description: 'Fund Distribution'
     },
     { 
+        name: 'Alerts', 
+        path: '/state/alerts', 
+        icon: Bell,
+        badgeVariant: 'destructive',
+        description: 'Notifications & Updates'
+    },
+    { 
         name: 'Messages', 
         path: '/state/communications', 
         icon: MessageSquareWarning,

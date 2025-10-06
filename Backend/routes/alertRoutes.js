@@ -1,13 +1,22 @@
 // Backend/routes/alertRoutes.js
+
 import express from 'express';
-import { getMyAlerts, acknowledgeAlert, snoozeAlert, generateAlerts } from '../controllers/alertController.js';
+const router = express.Router();
+import { 
+    getMyAlerts, 
+    acknowledgeAlert, 
+    snoozeAlert, 
+    generateAlerts // Make sure this is imported
+} from '../controllers/alertController.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
+// Routes for fetching and managing alerts
+router.route('/').get(protect, getMyAlerts);
+router.route('/:id/acknowledge').put(protect, acknowledgeAlert);
+router.route('/:id/snooze').put(protect, snoozeAlert);
 
-router.get('/', protect, getMyAlerts);
-router.put('/:id/acknowledge', protect, acknowledgeAlert);
-router.put('/:id/snooze', protect, snoozeAlert);
-router.post('/generate', protect, isAdmin, generateAlerts);
+// --- THIS IS THE ROUTE TO CHECK ---
+// It should be a POST route and protected by admin middleware
+router.route('/generate').post(protect, isAdmin, generateAlerts);
 
 export default router;
