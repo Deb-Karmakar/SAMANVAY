@@ -576,6 +576,15 @@ const getProjectLocations = asyncHandler(async (req, res) => {
     res.json(projects);
 });
 
+const getProjectLocationsForState = asyncHandler(async (req, res) => {
+    const projects = await Project.find({ 
+        state: req.user.state, // Filter by the user's state
+        'location.coordinates': { $exists: true, $ne: [] } 
+    }).select('name status component location budget progress district'); // Added district for filtering
+
+    res.json(projects);
+});
+
 // Export ALL functions
 export { 
     createProject, 
@@ -588,5 +597,6 @@ export {
     submitMilestoneForReview,
     reviewMilestone,
     getProjectsWithPendingReviews,
-    getProjectLocations
+    getProjectLocations,
+    getProjectLocationsForState
 };

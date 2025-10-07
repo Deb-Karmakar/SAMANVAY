@@ -13,7 +13,8 @@ import {
     submitMilestoneForReview,
     reviewMilestone,
     getProjectsWithPendingReviews,
-    getProjectLocations
+    getProjectLocations,
+    getProjectLocationsForState
 } from '../controllers/projectController.js';
 import { protect, isAdmin, isStateOfficer, isExecutingAgency } from '../middleware/authMiddleware.js';
 
@@ -36,6 +37,9 @@ router.route('/:projectId/checklist/:assignmentIndex/:checklistIndex/submit').pu
 
 // --- Dynamic :id route is now last ---
 router.route('/:id').get(protect, getProjectById);
+
+router.route('/locations/mystate').get(protect, isStateOfficer, getProjectLocationsForState);
+
 
 
 export default router;
