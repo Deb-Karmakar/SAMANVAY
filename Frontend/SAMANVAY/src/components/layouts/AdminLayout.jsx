@@ -37,6 +37,8 @@ import {
     IndianRupee,
     Activity
 } from 'lucide-react';
+import { GrDashboard } from "react-icons/gr";
+
 import { cn } from '@/lib/utils';
 
 // --- Navigation Configuration ---
@@ -47,6 +49,13 @@ const navLinks = [
         icon: LayoutDashboard,
         badge: null,
         description: 'Overview & Analytics'
+    },
+    { 
+        name: 'PFMS', 
+        path: '/admin/pfms', 
+        icon: GrDashboard,
+        badge: null,
+        description: 'Fund flow and utilization insights'
     },
     { 
         name: 'GIS Map', 
