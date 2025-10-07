@@ -1,14 +1,17 @@
+// Backend/services/pfmsRealDataService.js (Update this file)
+
 import { PFMSData, PFMSTransaction } from '../models/pfmsModel.js';
 import Project from '../models/projectModel.js';
 import Agency from '../models/agencyModel.js';
+import UtilizationReport from '../models/utilizationReportModel.js';
 
 class PFMSRealDataService {
     
     components = ['Adarsh Gram', 'GIA', 'Hostel'];
     
-    // Calculate real PFMS data from projects in database
+    // Calculate real PFMS data from projects and utilization reports
     async calculateRealPFMSData(fiscalYear) {
-        console.log(`📊 Calculating real PFMS data from projects for ${fiscalYear}...`);
+        console.log(`📊 Calculating real PFMS data from projects and utilization reports for ${fiscalYear}...`);
         
         try {
             // Get all projects from database
@@ -16,12 +19,30 @@ class PFMSRealDataService {
                 .populate('assignments.agency')
                 .lean();
             
-            console.log(`📁 Found ${projects.length} projects in database`);
+            // Get all approved utilization reports
+            const utilizationReports = await UtilizationReport.find({ 
+                status: 'Approved' 
+            }).populate('project').lean();
+            
+            console.log(`📁 Found ${projects.length} projects and ${utilizationReports.length} approved utilization reports`);
             
             if (projects.length === 0) {
                 console.warn('⚠️ No projects found. Using mock data instead.');
                 return this.generateMockData(fiscalYear);
             }
+            
+            // Create a map of project utilization from reports
+            const projectUtilizationMap = {};
+            utilizationReports.forEach(report => {
+                if (report.project) {
+                    const projectId = report.project._id.toString();
+                    if (!projectUtilizationMap[projectId]) {
+                        projectUtilizationMap[projectId] = 0;
+                    }
+                    // Convert from base unit (Rupees) if needed
+                    projectUtilizationMap[projectId] += report.amount;
+                }
+            });
             
             // Initialize state data structure
             const stateData = {};
@@ -44,23 +65,23 @@ class PFMSRealDataService {
             
             // Process each project
             projects.forEach(project => {
-                // Handle missing or invalid state
                 let state = project.state;
                 
                 if (!state || state.trim() === '') {
                     projectsWithoutState++;
                     console.warn(`⚠️ Project ${project._id} has no state defined. Using 'Unknown State'.`);
-                    state = 'Unknown State'; // Use a default state instead of skipping
+                    state = 'Unknown State';
                 }
                 
-                const component = project.component || 'Adarsh Gram'; // Default component
+                const component = project.component || 'Adarsh Gram';
                 const budget = project.budget || 0;
                 const status = project.status || 'Pending';
+                const projectId = project._id.toString();
                 
                 // Initialize state if not exists
                 if (!stateData[state]) {
                     stateData[state] = {
-                        state: state, // Ensure state field is always set
+                        state: state,
                         allocated: 0,
                         released: 0,
                         utilized: 0,
@@ -81,7 +102,7 @@ class PFMSRealDataService {
                     };
                 }
                 
-                // Calculate allocated, released, and utilized amounts
+                // Calculate allocated and released amounts
                 const allocated = budget;
                 let released = 0;
                 let utilized = 0;
@@ -90,20 +111,36 @@ class PFMSRealDataService {
                 if (project.assignments && project.assignments.length > 0) {
                     project.assignments.forEach(assignment => {
                         released += assignment.allocatedFunds || 0;
-                        utilized += assignment.fundsUtilized || 0;
                     });
                 } else {
                     // If no assignments, estimate based on status
                     if (status === 'Approved' || status === 'Ongoing' || status === 'Completed') {
                         released = budget * 0.7; // Assume 70% released
                     }
-                    
-                    if (status === 'Ongoing') {
-                        utilized = released * 0.5; // Assume 50% utilized for ongoing
-                    } else if (status === 'Completed') {
-                        utilized = released * 0.95; // Assume 95% utilized for completed
+                }
+                
+                // Get REAL utilization from utilization reports
+                if (projectUtilizationMap[projectId]) {
+                    utilized = projectUtilizationMap[projectId];
+                    console.log(`✅ Project ${project.name} has real utilization: ₹${utilized.toLocaleString()}`);
+                } else {
+                    // Fallback to assignment data or estimates
+                    if (project.assignments && project.assignments.length > 0) {
+                        project.assignments.forEach(assignment => {
+                            utilized += assignment.fundsUtilized || 0;
+                        });
+                    } else {
+                        // Estimate if no real data
+                        if (status === 'Ongoing') {
+                            utilized = released * 0.3;
+                        } else if (status === 'Completed') {
+                            utilized = released * 0.8;
+                        }
                     }
                 }
+                
+                // Ensure utilized doesn't exceed released
+                utilized = Math.min(utilized, released);
                 
                 // Update state data
                 stateData[state].allocated += allocated;
@@ -140,14 +177,13 @@ class PFMSRealDataService {
                 projectsProcessed++;
             });
             
-            console.log(`📈 Processed ${projectsProcessed} projects`);
+            console.log(`📈 Processed ${projectsProcessed} projects with ${utilizationReports.length} utilization reports`);
             if (projectsWithoutState > 0) {
-                console.warn(`⚠️ ${projectsWithoutState} projects had no state information (assigned to 'Unknown State')`);
+                console.warn(`⚠️ ${projectsWithoutState} projects had no state information`);
             }
             
             // Convert state data to array and calculate rates
             const stateBreakdown = Object.values(stateData).map(state => {
-                // Ensure state name is valid
                 if (!state.state || state.state.trim() === '') {
                     state.state = 'Unknown State';
                 }
@@ -200,14 +236,17 @@ class PFMSRealDataService {
                 ? Math.round((totalReleased / totalAllocated) * 100) 
                 : 0;
             
-            // Generate quarterly data
-            const quarterlyData = this.generateQuarterlyData(totalReleased, totalUtilized);
+            // Generate quarterly data with real utilization
+            const quarterlyData = await this.generateRealQuarterlyData(totalReleased, utilizationReports);
+            
+            // Create transactions from utilization reports
+            await this.createTransactionsFromUtilization(utilizationReports, fiscalYear);
             
             console.log(`✅ Calculated real PFMS data:`);
             console.log(`   - States with data: ${stateBreakdown.length}`);
             console.log(`   - Total Allocated: ₹${totalAllocated.toLocaleString()}`);
             console.log(`   - Total Released: ₹${totalReleased.toLocaleString()}`);
-            console.log(`   - Total Utilized: ₹${totalUtilized.toLocaleString()}`);
+            console.log(`   - Total Utilized (Real): ₹${totalUtilized.toLocaleString()}`);
             console.log(`   - Utilization Rate: ${nationalUtilizationRate}%`);
             
             return {
@@ -223,7 +262,7 @@ class PFMSRealDataService {
                 quarterlyData,
                 lastSyncedAt: new Date(),
                 syncStatus: 'Success',
-                dataSource: 'Auto_Calculated' // Keep this as 'Auto_Calculated' since it's a valid enum
+                dataSource: 'Real_Project_Data' // Updated to show real data
             };
             
         } catch (error) {
@@ -232,29 +271,34 @@ class PFMSRealDataService {
         }
     }
     
-    // Calculate performance rating
-    calculatePerformance(utilizationRate) {
-        if (utilizationRate >= 80) return 'Excellent';
-        if (utilizationRate >= 60) return 'Good';
-        if (utilizationRate >= 40) return 'Average';
-        return 'Poor';
-    }
-    
-    // Generate quarterly data
-    generateQuarterlyData(totalReleased, totalUtilized) {
+    // Generate quarterly data from real utilization reports
+    async generateRealQuarterlyData(totalReleased, utilizationReports) {
         const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const quarterlyUtilization = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
+        
+        // Group utilization by quarter
+        utilizationReports.forEach(report => {
+            const date = new Date(report.reviewedAt || report.createdAt);
+            const month = date.getMonth();
+            let quarter;
+            
+            if (month < 3) quarter = 'Q1';
+            else if (month < 6) quarter = 'Q2';
+            else if (month < 9) quarter = 'Q3';
+            else quarter = 'Q4';
+            
+            quarterlyUtilization[quarter] += report.amount;
+        });
+        
         let cumulativeRelease = 0;
         let cumulativeUtilization = 0;
         
         return quarters.map((quarter, index) => {
             const releasePercentage = [0.15, 0.25, 0.30, 0.30][index];
-            const utilizationPercentage = [0.10, 0.20, 0.35, 0.35][index];
-            
             const released = Math.round(totalReleased * releasePercentage);
-            const utilized = Math.round(totalUtilized * utilizationPercentage);
             
             cumulativeRelease += released;
-            cumulativeUtilization += utilized;
+            cumulativeUtilization += quarterlyUtilization[quarter];
             
             return {
                 quarter,
@@ -264,9 +308,65 @@ class PFMSRealDataService {
                 utilizationRate: cumulativeRelease > 0 
                     ? Math.round((cumulativeUtilization / cumulativeRelease) * 100)
                     : 0,
-                releaseRate: 100
+                releaseRate: 100,
+                realUtilization: quarterlyUtilization[quarter] // Track real vs estimated
             };
         });
+    }
+    
+    // Create PFMS transactions from utilization reports
+    async createTransactionsFromUtilization(utilizationReports, fiscalYear) {
+        for (const report of utilizationReports) {
+            if (!report.project) continue;
+            
+            const existingTransaction = await PFMSTransaction.findOne({
+                transactionId: `UTL-${report._id}`
+            });
+            
+            if (!existingTransaction) {
+                try {
+                    await PFMSTransaction.create({
+                        transactionId: `UTL-${report._id}`,
+                        type: 'Utilization',
+                        amount: report.amount,
+                        state: report.project.state || 'Unknown State',
+                        component: report.project.component || 'Adarsh Gram',
+                        project: report.project._id,
+                        agency: report.agency,
+                        description: `Utilization certificate approved - ${report.comments || ''}`,
+                        pfmsReferenceNumber: `PFMS-UTL-${report._id}`,
+                        status: 'Verified',
+                        fiscalYear: fiscalYear,
+                        quarter: this.getQuarter(new Date(report.reviewedAt || report.createdAt)),
+                        metadata: {
+                            certificateUrl: report.certificateUrl,
+                            approvedBy: report.reviewedBy,
+                            approvedAt: report.reviewedAt
+                        }
+                    });
+                    console.log(`✅ Created PFMS transaction for utilization report ${report._id}`);
+                } catch (error) {
+                    console.error(`❌ Failed to create transaction for report ${report._id}:`, error.message);
+                }
+            }
+        }
+    }
+    
+    // Helper to get quarter from date
+    getQuarter(date) {
+        const month = date.getMonth();
+        if (month < 3) return 'Q1';
+        if (month < 6) return 'Q2';
+        if (month < 9) return 'Q3';
+        return 'Q4';
+    }
+    
+    // Calculate performance rating
+    calculatePerformance(utilizationRate) {
+        if (utilizationRate >= 80) return 'Excellent';
+        if (utilizationRate >= 60) return 'Good';
+        if (utilizationRate >= 40) return 'Average';
+        return 'Poor';
     }
     
     // Fallback to mock data if no real projects
@@ -317,6 +417,35 @@ class PFMSRealDataService {
             syncStatus: 'Success',
             dataSource: 'Auto_Calculated'
         };
+    }
+    
+    // Simple quarterly data generation for mock
+    generateQuarterlyData(totalReleased, totalUtilized) {
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        let cumulativeRelease = 0;
+        let cumulativeUtilization = 0;
+        
+        return quarters.map((quarter, index) => {
+            const releasePercentage = [0.15, 0.25, 0.30, 0.30][index];
+            const utilizationPercentage = [0.10, 0.20, 0.35, 0.35][index];
+            
+            const released = Math.round(totalReleased * releasePercentage);
+            const utilized = Math.round(totalUtilized * utilizationPercentage);
+            
+            cumulativeRelease += released;
+            cumulativeUtilization += utilized;
+            
+            return {
+                quarter,
+                released: cumulativeRelease,
+                utilized: cumulativeUtilization,
+                projects: Math.floor(100 * releasePercentage),
+                utilizationRate: cumulativeRelease > 0 
+                    ? Math.round((cumulativeUtilization / cumulativeRelease) * 100)
+                    : 0,
+                releaseRate: 100
+            };
+        });
     }
 }
 
