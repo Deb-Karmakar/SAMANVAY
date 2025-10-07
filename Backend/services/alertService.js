@@ -193,51 +193,75 @@ class AlertService {
     }
     
     // Process all active projects
-    async generateAllAlerts() {
+     async generateAllAlerts() {
         try {
-            console.log('🔍 Starting alert generation...');
+            console.log('🔍 Starting automatic status update and alert generation...'); // <-- Look for this new message
             
             const projects = await Project.find({
-                status: { $ne: 'Completed' }
+                status: { $in: ['On Track', 'Delayed'] }
             }).populate('assignments.agency');
             
             console.log(`📊 Evaluating ${projects.length} active projects...`);
             
             let totalNewAlerts = 0;
-            
+            let statusChanges = 0;
+
             for (const project of projects) {
+                const originalStatus = project.status;
+                const expectedProgress = this.calculateExpectedProgress(project);
+                let isBehindSchedule = false;
+
+                if (expectedProgress !== null && project.progress < (expectedProgress - 15)) {
+                    isBehindSchedule = true;
+                }
+
+                // --- CORE AUTOMATION LOGIC ---
+                if (isBehindSchedule) {
+                    if (project.status !== 'Delayed') {
+                        project.status = 'Delayed';
+                        console.log(`❗ Status Change: "${project.name}" is now marked as Delayed.`);
+                    }
+                } else {
+                    if (project.status === 'Delayed') {
+                        project.status = 'On Track';
+                        console.log(`✅ Status Change: "${project.name}" is now back On Track.`);
+                    }
+                }
+                
+                if (project.status !== originalStatus) {
+                    await project.save();
+                    statusChanges++;
+                }
+                // --- END OF AUTOMATION LOGIC ---
+
                 const alerts = await this.evaluateProject(project);
                 
                 for (const alertData of alerts) {
-                    // Check if similar alert already exists and is not acknowledged
                     const existingAlert = await Alert.findOne({
                         type: alertData.type,
                         project: alertData.project,
-                        agency: alertData.agency,
                         acknowledged: false,
                         autoResolved: false,
-                        snoozedUntil: { $lt: new Date() }
                     });
                     
                     if (!existingAlert) {
                         await Alert.create(alertData);
                         totalNewAlerts++;
-                        console.log(`⚠️  New ${alertData.severity} alert: ${alertData.type} for ${project.name}`);
+                        console.log(`⚠️  New ${alertData.severity} alert: ${alertData.type} for project "${project.name}"`);
                     }
                 }
             }
             
-            // Auto-resolve alerts where conditions are fixed
             await this.autoResolveAlerts();
+            console.log(`✅ Process complete. ${statusChanges} status changes made. ${totalNewAlerts} new alerts created.`);
             
-            console.log(`✅ Alert generation complete. ${totalNewAlerts} new alerts created.`);
-            
-            return { success: true, newAlerts: totalNewAlerts };
         } catch (error) {
-            console.error('❌ Alert generation failed:', error);
+            console.error('❌ Automatic status update/alert generation failed:', error);
             throw error;
         }
     }
+
+
     
     // Auto-resolve alerts when conditions are fixed
     async autoResolveAlerts() {
