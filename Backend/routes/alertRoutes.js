@@ -1,22 +1,28 @@
 // Backend/routes/alertRoutes.js
-
 import express from 'express';
 const router = express.Router();
 import { 
     getMyAlerts, 
     acknowledgeAlert, 
     snoozeAlert, 
-    generateAlerts // Make sure this is imported
+    generateAlerts,
+    triggerEscalation,
+    runNightlyJob,
+    getEscalationStats
 } from '../controllers/alertController.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 
-// Routes for fetching and managing alerts
+// User alert management routes
 router.route('/').get(protect, getMyAlerts);
 router.route('/:id/acknowledge').put(protect, acknowledgeAlert);
 router.route('/:id/snooze').put(protect, snoozeAlert);
 
-// --- THIS IS THE ROUTE TO CHECK ---
-// It should be a POST route and protected by admin middleware
+// Admin-only routes
 router.route('/generate').post(protect, isAdmin, generateAlerts);
+
+// NEW: Manual escalation testing routes (admin only)
+router.route('/escalate').post(protect, isAdmin, triggerEscalation);
+router.route('/nightly-job').post(protect, isAdmin, runNightlyJob);
+router.route('/escalation-stats').get(protect, isAdmin, getEscalationStats);
 
 export default router;

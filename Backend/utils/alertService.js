@@ -1,445 +1,530 @@
-// Backend/utils/alertService.js
+// Backend/services/alertService.js (Complete Fixed Version)
+
 import Project from '../models/projectModel.js';
 import Alert from '../models/alertModel.js';
+import User from '../models/userModel.js';
 
 class AlertService {
+    
+    // Helper function to get base alert type (remove escalation prefixes)
+    getBaseAlertType(alertType) {
+        // Remove 'escalated_' or 'admin_escalated_' prefixes to get the original type
+        return alertType
+            .replace(/^admin_escalated_/, '')
+            .replace(/^escalated_/, '');
+    }
+    
     // Calculate expected progress based on timeline
-    calculateExpectedProgress(startDate, endDate) {
-        if (!startDate || !endDate) return null;
+    calculateExpectedProgress(project) {
+        if (!project.startDate || !project.endDate) return null;
+        
         const now = new Date();
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const start = new Date(project.startDate);
+        const end = new Date(project.endDate);
         
         if (now < start) return 0;
         if (now > end) return 100;
         
         const totalDays = (end - start) / (1000 * 60 * 60 * 24);
-        const daysPassed = (now - start) / (1000 * 60 * 60 * 24);
+        const elapsedDays = (now - start) / (1000 * 60 * 60 * 24);
         
-        return Math.round((daysPassed / totalDays) * 100);
+        return Math.round((elapsedDays / totalDays) * 100);
     }
-
-    // Calculate days since last activity
-    getLastActivityDate(project) {
-        let lastActivity = project.createdAt;
+    
+    // Get days since last activity
+    getDaysSinceLastActivity(project) {
+        let lastActivityDate = new Date(project.updatedAt);
         
-        project.assignments.forEach(assignment => {
-            assignment.checklist.forEach(milestone => {
-                if (milestone.submittedAt && new Date(milestone.submittedAt) > lastActivity) {
-                    lastActivity = new Date(milestone.submittedAt);
+        project.assignments?.forEach(assignment => {
+            assignment.checklist?.forEach(milestone => {
+                if (milestone.submittedAt && new Date(milestone.submittedAt) > lastActivityDate) {
+                    lastActivityDate = new Date(milestone.submittedAt);
                 }
-                if (milestone.reviewedAt && new Date(milestone.reviewedAt) > lastActivity) {
-                    lastActivity = new Date(milestone.reviewedAt);
+                if (milestone.reviewedAt && new Date(milestone.reviewedAt) > lastActivityDate) {
+                    lastActivityDate = new Date(milestone.reviewedAt);
                 }
             });
         });
         
-        return lastActivity;
+        const daysSince = (Date.now() - lastActivityDate) / (1000 * 60 * 60 * 24);
+        return Math.floor(daysSince);
     }
-
+    
     // Calculate rejection rate for an agency
     calculateRejectionRate(assignment) {
-        const submitted = assignment.checklist.filter(m => 
-            m.status === 'Approved' || m.status === 'Rejected'
-        );
-        
+        const submitted = assignment.checklist?.filter(m => m.status !== 'Not Started') || [];
         if (submitted.length === 0) return 0;
         
-        const rejected = assignment.checklist.filter(m => m.status === 'Rejected').length;
-        return Math.round((rejected / submitted.length) * 100);
+        const rejected = assignment.checklist?.filter(m => m.status === 'Rejected') || [];
+        return (rejected.length / submitted.length) * 100;
     }
-
-    // Check for consecutive rejections
+    
+    // Get consecutive rejections count
     getConsecutiveRejections(assignment) {
-        let consecutive = 0;
-        const sortedMilestones = assignment.checklist
-            .filter(m => m.reviewedAt)
-            .sort((a, b) => new Date(b.reviewedAt) - new Date(a.reviewedAt));
+        let count = 0;
+        const milestones = assignment.checklist || [];
         
-        for (const milestone of sortedMilestones) {
-            if (milestone.status === 'Rejected') {
-                consecutive++;
-            } else {
+        for (let i = milestones.length - 1; i >= 0; i--) {
+            if (milestones[i].status === 'Rejected') {
+                count++;
+            } else if (milestones[i].status !== 'Not Started') {
                 break;
             }
         }
-        
-        return consecutive;
+        return count;
     }
-
-    // Get oldest pending review
+    
+    // Check for pending reviews older than threshold
     getOldestPendingReview(project) {
-        let oldest = null;
+        let oldestDays = 0;
         
-        project.assignments.forEach(assignment => {
-            assignment.checklist.forEach(milestone => {
+        project.assignments?.forEach(assignment => {
+            assignment.checklist?.forEach(milestone => {
                 if (milestone.status === 'Pending Review' && milestone.submittedAt) {
-                    if (!oldest || new Date(milestone.submittedAt) < new Date(oldest)) {
-                        oldest = new Date(milestone.submittedAt);
+                    const daysPending = (Date.now() - new Date(milestone.submittedAt)) / (1000 * 60 * 60 * 24);
+                    if (daysPending > oldestDays) {
+                        oldestDays = daysPending;
                     }
                 }
             });
         });
         
-        return oldest;
+        return Math.floor(oldestDays);
     }
-
-    // Calculate days since last milestone submission for agency
-    getDaysSinceLastSubmission(assignment) {
-        let lastSubmission = null;
-        
-        assignment.checklist.forEach(milestone => {
-            if (milestone.submittedAt) {
-                if (!lastSubmission || new Date(milestone.submittedAt) > new Date(lastSubmission)) {
-                    lastSubmission = new Date(milestone.submittedAt);
-                }
-            }
-        });
-        
-        if (!lastSubmission) return null;
-        
-        const now = new Date();
-        const daysSince = (now - lastSubmission) / (1000 * 60 * 60 * 24);
-        return Math.floor(daysSince);
-    }
-
-    // Generate alert message templates
-    generateAlertMessage(type, data) {
-        const messages = {
-            deadline_approaching: `Project "${data.projectName}" deadline in ${data.daysRemaining} days but only ${data.progress}% complete. Immediate action required.`,
-            behind_schedule: `Project "${data.projectName}" is ${data.gap}% behind schedule (expected ${data.expected}%, actual ${data.actual}%).`,
-            no_activity: `Project "${data.projectName}" has had no activity for ${data.days} days. Contact agency urgently.`,
-            consecutive_rejections: `${data.consecutiveCount} consecutive milestone rejections for ${data.agencyName} on project "${data.projectName}". Quality review needed.`,
-            inactive_agency: `Agency "${data.agencyName}" has not submitted milestones for ${data.days} days on project "${data.projectName}".`,
-            review_pending: `State officer review pending for ${data.days} days on project "${data.projectName}". Please review submission.`,
-            high_rejection_rate: `High rejection rate (${data.rate}%) for agency "${data.agencyName}" on project "${data.projectName}".`,
-            budget_concern: `${data.budgetPercent}% budget allocated to project "${data.projectName}" but only ${data.progress}% progress.`,
-            
-            // --- NEW MESSAGE TEMPLATES ---
-            milestone_due_soon: `Milestone "${data.milestoneName}" on project "${data.projectName}" is due in ${data.days} day(s).`,
-            milestone_overdue: `Milestone "${data.milestoneName}" on project "${data.projectName}" is overdue by ${data.days} day(s).`
-        };
-        
-        return messages[type] || 'Alert requires attention';
-    }
-
-    // Evaluate all alert rules for a project
-    async evaluateProjectAlerts(project) {
+    
+    // Main evaluation function
+    async evaluateProject(project) {
         const alerts = [];
         const now = new Date();
-        
-        // --- Project-level checks ---
-        const daysToDeadline = project.endDate ? (new Date(project.endDate) - now) / (1000 * 60 * 60 * 24) : null;
-        const expectedProgress = this.calculateExpectedProgress(project.startDate, project.endDate);
-        const progressGap = expectedProgress ? expectedProgress - project.progress : 0;
-        const lastActivity = this.getLastActivityDate(project);
-        const daysSinceActivity = (now - lastActivity) / (1000 * 60 * 60 * 24);
-        const totalAllocated = project.assignments.reduce((sum, a) => sum + (a.allocatedFunds || 0), 0);
-        const budgetPercent = project.budget > 0 ? Math.round((totalAllocated / project.budget) * 100) : 0;
-        const oldestReview = this.getOldestPendingReview(project);
 
-        // CRITICAL ALERTS
-        
-        // 1. Deadline approaching with low progress
-        if (daysToDeadline !== null && daysToDeadline < 7 && daysToDeadline > 0 && project.progress < 80) {
-            alerts.push({
-                alertType: 'deadline_approaching',
-                severity: 'critical',
-                message: this.generateAlertMessage('deadline_approaching', {
-                    projectName: project.name,
-                    daysRemaining: Math.ceil(daysToDeadline),
-                    progress: project.progress
-                }),
-                metadata: { daysToDeadline: Math.ceil(daysToDeadline), progress: project.progress }
-            });
-        }
+        const stateOfficer = await User.findOne({ role: 'StateOfficer', state: project.state, isActive: true });
+        const admins = await User.find({ role: 'CentralAdmin', isActive: true });
 
-        // 2. No activity for 14+ days
-        if (daysSinceActivity >= 14) {
-            alerts.push({
-                alertType: 'no_activity',
-                severity: 'critical',
-                message: this.generateAlertMessage('no_activity', {
-                    projectName: project.name,
-                    days: Math.floor(daysSinceActivity)
-                }),
-                metadata: { daysSinceActivity: Math.floor(daysSinceActivity) }
-            });
-        }
+        if (project.status === 'Completed') return alerts;
 
-        // 3. Budget exhausted but progress incomplete
-        if (budgetPercent >= 100 && project.progress < 100) {
-            alerts.push({
-                alertType: 'budget_concern',
-                severity: 'critical',
-                message: this.generateAlertMessage('budget_concern', {
-                    projectName: project.name,
-                    budgetPercent: 100,
-                    progress: project.progress
-                }),
-                metadata: { budgetPercent: 100, progress: project.progress }
-            });
-        }
-
-        // 4. Behind schedule by 30%+
-        if (progressGap > 30) {
-            alerts.push({
-                alertType: 'behind_schedule',
-                severity: 'critical',
-                message: this.generateAlertMessage('behind_schedule', {
-                    projectName: project.name,
-                    gap: Math.round(progressGap),
-                    expected: expectedProgress,
-                    actual: project.progress
-                }),
-                metadata: { expectedProgress, actualProgress: project.progress, gap: progressGap }
-            });
-        }
-
-        // WARNING ALERTS
-
-        // 5. Behind schedule by 15-30%
-        if (progressGap >= 15 && progressGap <= 30) {
-            alerts.push({
-                alertType: 'behind_schedule',
-                severity: 'warning',
-                message: this.generateAlertMessage('behind_schedule', {
-                    projectName: project.name,
-                    gap: Math.round(progressGap),
-                    expected: expectedProgress,
-                    actual: project.progress
-                }),
-                metadata: { expectedProgress, actualProgress: project.progress, gap: progressGap }
-            });
-        }
-
-        // 6. Budget concern (70% spent, 40% progress)
-        if (budgetPercent >= 70 && project.progress <= 40) {
-            alerts.push({
-                alertType: 'budget_concern',
-                severity: 'warning',
-                message: this.generateAlertMessage('budget_concern', {
-                    projectName: project.name,
-                    budgetPercent,
-                    progress: project.progress
-                }),
-                metadata: { budgetPercent, progress: project.progress }
-            });
-        }
-
-        // 7. Review pending for 72+ hours
-        if (oldestReview) {
-            const hoursPending = (now - oldestReview) / (1000 * 60 * 60);
-            if (hoursPending >= 72) {
+        // PROJECT-LEVEL ALERTS
+        if (project.endDate && stateOfficer) {
+            const daysUntilDeadline = (new Date(project.endDate) - now) / (1000 * 60 * 60 * 24);
+            if (daysUntilDeadline <= 7 && daysUntilDeadline > 0 && project.progress < 80) {
                 alerts.push({
-                    alertType: 'review_pending',
-                    severity: 'warning',
-                    message: this.generateAlertMessage('review_pending', {
-                        projectName: project.name,
-                        days: Math.floor(hoursPending / 24)
-                    }),
-                    metadata: { hoursPending: Math.round(hoursPending) }
-                });
-            }
-        }
-
-        // --- Agency-specific alerts ---
-        for (const assignment of project.assignments) {
-            const agencyName = assignment.agency?.name || 'Unknown Agency';
-
-            // 8. Consecutive rejections
-            const consecutiveRejections = this.getConsecutiveRejections(assignment);
-            if (consecutiveRejections >= 3) {
-                alerts.push({
-                    alertType: 'consecutive_rejections',
+                    recipient: stateOfficer._id,
+                    type: 'deadline_approaching',
                     severity: 'critical',
-                    agency: assignment.agency?._id,
-                    message: this.generateAlertMessage('consecutive_rejections', {
-                        projectName: project.name,
-                        agencyName,
-                        consecutiveCount: consecutiveRejections
-                    }),
-                    metadata: { consecutiveRejections, agencyName }
+                    project: project._id,
+                    message: `Project "${project.name}" deadline is in ${Math.floor(daysUntilDeadline)} days but it is only ${project.progress}% complete.`,
                 });
             }
+        }
 
-            // 9. High rejection rate
-            const rejectionRate = this.calculateRejectionRate(assignment);
-            if (rejectionRate >= 40) {
+        const daysSinceActivity = this.getDaysSinceLastActivity(project);
+        if (daysSinceActivity >= 14 && stateOfficer) {
+           alerts.push({
+                recipient: stateOfficer._id,
+                type: 'inactive_project',
+                severity: 'critical',
+                project: project._id,
+                message: `Project "${project.name}" has had no activity for ${daysSinceActivity} days.`,
+            });
+        }
+
+        const oldestReviewDays = this.getOldestPendingReview(project);
+        if (oldestReviewDays > 3) {
+            admins.forEach(admin => {
                 alerts.push({
-                    alertType: 'high_rejection_rate',
-                    severity: 'warning',
-                    agency: assignment.agency?._id,
-                    message: this.generateAlertMessage('high_rejection_rate', {
-                        projectName: project.name,
-                        agencyName,
-                        rate: rejectionRate
-                    }),
-                    metadata: { rejectionRate, agencyName }
+                    recipient: admin._id,
+                    type: 'slow_review',
+                    severity: oldestReviewDays > 7 ? 'critical' : 'warning',
+                    project: project._id,
+                    message: `The State Officer for ${project.state} has a milestone pending review for ${oldestReviewDays} days on project "${project.name}".`,
                 });
-            }
+            });
+        }
 
-            // 10. Agency inactive (no submission in 10+ days)
-            const daysSinceSubmission = this.getDaysSinceLastSubmission(assignment);
-            if (daysSinceSubmission !== null && daysSinceSubmission >= 10) {
+        // ASSIGNMENT-LEVEL ALERTS
+        for (const assignment of project.assignments || []) {
+            const agencyUser = await User.findOne({ agencyId: assignment.agency._id, isActive: true });
+            
+            const expectedProgress = this.calculateExpectedProgress(project);
+            if (expectedProgress !== null && project.progress < (expectedProgress - 15) && stateOfficer) {
+                const gap = expectedProgress - project.progress;
                 alerts.push({
-                    alertType: 'inactive_agency',
-                    severity: 'warning',
-                    agency: assignment.agency?._id,
-                    message: this.generateAlertMessage('inactive_agency', {
-                        projectName: project.name,
-                        agencyName,
-                        days: daysSinceSubmission
-                    }),
-                    metadata: { daysSinceSubmission, agencyName }
+                    recipient: stateOfficer._id,
+                    type: 'behind_schedule',
+                    severity: gap > 30 ? 'critical' : 'warning',
+                    project: project._id,
+                    agency: assignment.agency._id,
+                    message: `Project "${project.name}" (Agency: ${assignment.agency.name}) is ${gap}% behind schedule.`,
                 });
             }
+            
+            if (stateOfficer) {
+                const rejectionRate = this.calculateRejectionRate(assignment);
+                if (rejectionRate > 40) {
+                    alerts.push({
+                        recipient: stateOfficer._id,
+                        type: 'high_rejection_rate',
+                        severity: 'warning',
+                        project: project._id,
+                        agency: assignment.agency._id,
+                        message: `Agency "${assignment.agency?.name}" has a ${rejectionRate.toFixed(0)}% rejection rate on "${project.name}".`,
+                    });
+                }
 
-            // --- NEW AGENCY-SPECIFIC ALERTS (Milestone Deadlines) ---
-            for (const milestone of assignment.checklist) {
-                // Check only if milestone has a due date and is not yet approved
-                if (milestone.dueDate && milestone.status !== 'Approved') {
-                    const daysUntilDue = (new Date(milestone.dueDate) - now) / (1000 * 60 * 60 * 24);
-
-                    // 11. Milestone is due in 3 days or less
-                    if (daysUntilDue > 0 && daysUntilDue <= 3) {
-                        alerts.push({
-                            alertType: 'milestone_due_soon',
-                            severity: 'warning',
-                            agency: assignment.agency?._id,
-                            message: this.generateAlertMessage('milestone_due_soon', {
-                                projectName: project.name,
-                                milestoneName: milestone.text,
-                                days: Math.ceil(daysUntilDue)
-                            }),
-                            metadata: { milestoneId: milestone._id, milestoneName: milestone.text }
-                        });
-                    }
-                    
-                    // 12. Milestone is overdue
-                    if (daysUntilDue < 0) {
-                        alerts.push({
-                            alertType: 'milestone_overdue',
-                            severity: 'critical',
-                            agency: assignment.agency?._id,
-                            message: this.generateAlertMessage('milestone_overdue', {
-                                projectName: project.name,
-                                milestoneName: milestone.text,
-                                days: Math.abs(Math.floor(daysUntilDue))
-                            }),
-                            metadata: { milestoneId: milestone._id, milestoneName: milestone.text }
-                        });
-                    }
+                const consecutiveRejections = this.getConsecutiveRejections(assignment);
+                if (consecutiveRejections >= 2) {
+                     alerts.push({
+                        recipient: stateOfficer._id,
+                        type: 'consecutive_rejections',
+                        severity: 'critical',
+                        project: project._id,
+                        agency: assignment.agency._id,
+                        message: `Agency "${assignment.agency.name}" has ${consecutiveRejections} consecutive rejections on "${project.name}".`,
+                    });
                 }
             }
-        }
+            
+            if (agencyUser) {
+                (assignment.checklist || []).forEach(milestone => {
+                    if (milestone.dueDate && !['Approved', 'Completed'].includes(milestone.status)) {
+                        const daysUntilDue = (new Date(milestone.dueDate) - now) / (1000 * 60 * 60 * 24);
 
+                        if (daysUntilDue > 0 && daysUntilDue <= 3) {
+                            alerts.push({
+                                recipient: agencyUser._id,
+                                type: 'milestone_due_soon',
+                                severity: 'warning',
+                                project: project._id,
+                                agency: assignment.agency._id,
+                                message: `Milestone "${milestone.text}" for "${project.name}" is due in ${Math.ceil(daysUntilDue)} day(s).`,
+                            });
+                        } else if (daysUntilDue < 0) {
+                            alerts.push({
+                                recipient: agencyUser._id,
+                                type: 'milestone_overdue',
+                                severity: 'critical',
+                                project: project._id,
+                                agency: assignment.agency._id,
+                                message: `Milestone "${milestone.text}" for "${project.name}" is overdue.`,
+                            });
+                        }
+                    }
+                });
+            }
+        }
+        
         return alerts;
     }
-
-    // Main function to generate all alerts
+    
+    // Process all active projects
     async generateAllAlerts() {
         try {
-            console.log('🔍 Starting alert generation...');
+            console.log('🔍 Starting automatic status update and alert generation...');
             
             const projects = await Project.find({
                 status: { $in: ['On Track', 'Delayed', 'Pending Approval'] }
             }).populate('assignments.agency');
-
-            let totalAlertsCreated = 0;
+            
+            console.log(`📊 Evaluating ${projects.length} active projects...`);
+            
+            let totalNewAlerts = 0;
+            let statusChanges = 0;
 
             for (const project of projects) {
-                const alerts = await this.evaluateProjectAlerts(project);
+                const originalStatus = project.status;
+                const expectedProgress = this.calculateExpectedProgress(project);
+                let isBehindSchedule = false;
 
-                for (const alertData of alerts) {
-                    // Check if a similar alert already exists to avoid duplicates
-                    const existingQuery = {
-                        project: project._id,
-                        alertType: alertData.alertType,
-                        autoResolved: false,
-                        acknowledged: false,
-                    };
-                    if (alertData.agency) existingQuery.agency = alertData.agency;
-                    if (alertData.metadata?.milestoneId) existingQuery['metadata.milestoneId'] = alertData.metadata.milestoneId;
-                    
-                    const existingAlert = await Alert.findOne(existingQuery);
-
-                    if (!existingAlert) {
-                        await Alert.create({
-                            ...alertData,
-                            project: project._id,
-                            state: project.state
-                        });
-                        totalAlertsCreated++;
-                    }
+                if (expectedProgress !== null && project.progress < (expectedProgress - 15)) {
+                    isBehindSchedule = true;
                 }
 
-                await this.autoResolveAlerts(project);
-            }
+                if (isBehindSchedule) {
+                    if (project.status !== 'Delayed') {
+                        project.status = 'Delayed';
+                        console.log(`❗ Status Change: "${project.name}" is now marked as Delayed.`);
+                    }
+                } else {
+                    if (project.status === 'Delayed') {
+                        project.status = 'On Track';
+                        console.log(`✅ Status Change: "${project.name}" is now back On Track.`);
+                    }
+                }
+                
+                if (project.status !== originalStatus) {
+                    await project.save();
+                    statusChanges++;
+                }
 
-            console.log(`✅ Alert generation complete. Created ${totalAlertsCreated} new alerts.`);
-            return { success: true, alertsCreated: totalAlertsCreated };
+                const alertsToCreate = await this.evaluateProject(project);
+                
+                for (const alertData of alertsToCreate) {
+                    const existingAlert = await Alert.findOne({
+                        type: alertData.type,
+                        project: alertData.project,
+                        acknowledged: false,
+                        autoResolved: false,
+                    });
+                    
+                    if (!existingAlert) {
+                        await Alert.create(alertData);
+                        totalNewAlerts++;
+                        console.log(`⚠️  New ${alertData.severity} alert: ${alertData.type} for project "${project.name}"`);
+                    }
+                }
+            }
+            
+            await this.autoResolveAlerts();
+            console.log(`✅ Process complete. ${statusChanges} status changes made. ${totalNewAlerts} new alerts created.`);
+            
         } catch (error) {
-            console.error('❌ Alert generation failed:', error);
+            console.error('❌ Automatic status update/alert generation failed:', error);
             throw error;
         }
     }
 
-    // Auto-resolve alerts when conditions are fixed
-    async autoResolveAlerts(project) {
-        const now = new Date();
-        
-        const unresolvedAlerts = await Alert.find({
-            project: project._id,
-            autoResolved: false
-        });
+    // FIXED ESCALATION ENGINE
+    async escalateOldAlerts() {
+        try {
+            console.log('⚙️  Running escalation engine...');
+            
+            const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+            const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+            
+            let agencyEscalations = 0;
+            let stateEscalations = 0;
 
-        for (const alert of unresolvedAlerts) {
-            let shouldResolve = false;
+            // 1. Escalate agency alerts to state officers
+            const agencyAlertsToEscalate = await Alert.find({
+                escalationLevel: 0,
+                acknowledged: false,
+                autoResolved: false,
+                agency: { $exists: true },
+                createdAt: { $lt: twoDaysAgo }
+            }).populate('project', 'name state').populate('agency', 'name');
 
-            switch (alert.alertType) {
-                case 'deadline_approaching':
-                    if (project.progress >= 80 || project.status === 'Completed') {
-                        shouldResolve = true;
-                    }
-                    break;
+            for (const alert of agencyAlertsToEscalate) {
+                if (!alert.project?.state) {
+                    console.log(`⚠️  Skipping escalation for alert ${alert._id} - no state information`);
+                    continue;
+                }
+
+                const stateOfficer = await User.findOne({ 
+                    role: 'StateOfficer', 
+                    state: alert.project.state 
+                });
                 
-                case 'behind_schedule':
-                    const expected = this.calculateExpectedProgress(project.startDate, project.endDate);
-                    if (expected && (expected - project.progress) < 15) {
-                        shouldResolve = true;
+                if (stateOfficer) {
+                    // CRITICAL FIX: Get clean base type
+                    const baseType = this.getBaseAlertType(alert.type);
+                    
+                    const existingEscalation = await Alert.findOne({
+                        recipient: stateOfficer._id,
+                        project: alert.project._id,
+                        type: `escalated_${baseType}`,
+                        escalationLevel: 1,
+                        acknowledged: false
+                    });
+
+                    if (!existingEscalation) {
+                        await Alert.create({
+                            recipient: stateOfficer._id,
+                            escalationLevel: 1,
+                            type: `escalated_${baseType}`,
+                            severity: 'critical',
+                            project: alert.project._id,
+                            agency: alert.agency._id,
+                            message: `ESCALATION: Agency "${alert.agency.name}" has not acknowledged a '${baseType}' alert for project "${alert.project.name}" for over 2 days. Intervention required.`,
+                            metadata: {
+                                originalAlertId: alert._id,
+                                originalAlertType: alert.type,
+                                daysSinceOriginalAlert: Math.floor((Date.now() - alert.createdAt) / (1000 * 60 * 60 * 24))
+                            }
+                        });
+                        
+                        alert.escalationLevel = 1;
+                        await alert.save();
+                        agencyEscalations++;
+                        console.log(`📤 Escalated agency alert ${alert._id} (${baseType}) to state officer ${stateOfficer.email}`);
                     }
-                    break;
-                
-                case 'no_activity':
-                    if ((now - this.getLastActivityDate(project)) / (1000 * 60 * 60 * 24) < 14) {
-                        shouldResolve = true;
-                    }
-                    break;
-                
-                case 'review_pending':
-                    if (!this.getOldestPendingReview(project)) {
-                        shouldResolve = true;
-                    }
-                    break;
-                
-                // --- NEW AUTO-RESOLVE LOGIC ---
-                case 'milestone_due_soon':
-                case 'milestone_overdue':
-                    const milestone = project.assignments
-                        .flatMap(a => a.checklist)
-                        .find(m => m._id.equals(alert.metadata.milestoneId));
-                    if (!milestone || milestone.status === 'Approved') {
-                        shouldResolve = true;
-                    }
-                    break;
+                } else {
+                    console.log(`⚠️  No state officer found for state: ${alert.project.state}`);
+                }
             }
+            
+            // 2. Escalate state alerts to admins
+            const stateAlertsToEscalate = await Alert.find({
+                escalationLevel: 1,
+                acknowledged: false,
+                autoResolved: false,
+                createdAt: { $lt: fiveDaysAgo }
+            }).populate('project', 'name state');
 
-            if (shouldResolve) {
-                alert.autoResolved = true;
-                alert.resolvedAt = now;
+            const admins = await User.find({ role: 'CentralAdmin' });
+            
+            if (admins.length === 0) {
+                console.log('⚠️  No central admins found for escalation');
+            }
+            
+            for (const alert of stateAlertsToEscalate) {
+                if (alert.escalationLevel >= 2) continue;
+                
+                // CRITICAL FIX: Extract clean base type
+                const baseType = this.getBaseAlertType(alert.type);
+                
+                for (const admin of admins) {
+                    const existingAdminEscalation = await Alert.findOne({
+                        recipient: admin._id,
+                        project: alert.project._id,
+                        type: `admin_escalated_${baseType}`,
+                        escalationLevel: 2,
+                        acknowledged: false
+                    });
+
+                    if (!existingAdminEscalation) {
+                        await Alert.create({
+                            recipient: admin._id,
+                            escalationLevel: 2,
+                            type: `admin_escalated_${baseType}`,
+                            severity: 'critical',
+                            project: alert.project._id,
+                            agency: alert.agency,
+                            message: `ADMIN ESCALATION: A critical '${baseType}' issue for project "${alert.project.name}" in ${alert.project.state} has been unaddressed for over 5 days. High-level oversight needed.`,
+                            metadata: {
+                                originalAlertId: alert._id,
+                                originalAlertType: alert.type,
+                                daysSinceOriginalAlert: Math.floor((Date.now() - alert.createdAt) / (1000 * 60 * 60 * 24)),
+                                state: alert.project.state
+                            }
+                        });
+                    }
+                }
+                
+                alert.escalationLevel = 2;
                 await alert.save();
+                stateEscalations++;
+                console.log(`📤 Escalated state alert ${alert._id} (${baseType}) to all admins`);
             }
+            
+            console.log(`✅ Escalation engine finished. Agency→State: ${agencyEscalations}, State→Admin: ${stateEscalations}`);
+            
+        } catch (error) {
+            console.error('❌ Escalation engine failed:', error);
+            throw error;
+        }
+    }
+    
+    // Auto-resolve alerts when conditions are fixed
+    async autoResolveAlerts() {
+        try {
+            const unresolvedAlerts = await Alert.find({
+                acknowledged: false,
+                autoResolved: false,
+                type: { $regex: /^(?!escalated_|admin_escalated_)/ }
+            }).populate('project');
+            
+            let resolvedCount = 0;
+            
+            for (const alert of unresolvedAlerts) {
+                let shouldResolve = false;
+                
+                switch (this.getBaseAlertType(alert.type)) {
+                    case 'inactive_project':
+                        const daysSince = this.getDaysSinceLastActivity(alert.project);
+                        if (daysSince < 14) shouldResolve = true;
+                        break;
+                        
+                    case 'slow_review':
+                        const pendingDays = this.getOldestPendingReview(alert.project);
+                        if (pendingDays < 3) shouldResolve = true;
+                        break;
+                        
+                    case 'deadline_approaching':
+                        if (alert.project.progress >= 80) shouldResolve = true;
+                        break;
+                        
+                    case 'behind_schedule':
+                        const expectedProgress = this.calculateExpectedProgress(alert.project);
+                        if (expectedProgress !== null && alert.project.progress >= (expectedProgress - 10)) {
+                            shouldResolve = true;
+                        }
+                        break;
+                }
+                
+                if (shouldResolve) {
+                    alert.autoResolved = true;
+                    alert.resolvedAt = new Date();
+                    await alert.save();
+                    resolvedCount++;
+                    console.log(`✅ Auto-resolved alert: ${alert.type} for ${alert.project.name}`);
+                    
+                    await Alert.updateMany({
+                        'metadata.originalAlertId': alert._id,
+                        acknowledged: false,
+                        autoResolved: false
+                    }, {
+                        autoResolved: true,
+                        resolvedAt: new Date()
+                    });
+                }
+            }
+            
+            if (resolvedCount > 0) {
+                console.log(`✅ Auto-resolved ${resolvedCount} alerts`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Auto-resolve alerts failed:', error);
+            throw error;
+        }
+    }
+    
+    async runNightlyJob() {
+        try {
+            console.log('🌙 Starting nightly job...');
+            console.log('==================================');
+            
+            await this.generateAllAlerts();
+            await this.escalateOldAlerts();
+            
+            console.log('==================================');
+            console.log('🌙 Nightly job completed successfully');
+            
+            return {
+                success: true,
+                timestamp: new Date(),
+                message: 'Nightly job completed successfully'
+            };
+            
+        } catch (error) {
+            console.error('❌ Nightly job failed:', error);
+            return {
+                success: false,
+                timestamp: new Date(),
+                error: error.message
+            };
+        }
+    }
+    
+    async testEscalation() {
+        console.log('🧪 Running test escalation...');
+        await this.escalateOldAlerts();
+    }
+    
+    async getEscalationStats() {
+        try {
+            const stats = {
+                level0: await Alert.countDocuments({ escalationLevel: 0, acknowledged: false, autoResolved: false }),
+                level1: await Alert.countDocuments({ escalationLevel: 1, acknowledged: false, autoResolved: false }),
+                level2: await Alert.countDocuments({ escalationLevel: 2, acknowledged: false, autoResolved: false }),
+                totalUnacknowledged: await Alert.countDocuments({ acknowledged: false, autoResolved: false }),
+                totalAutoResolved: await Alert.countDocuments({ autoResolved: true })
+            };
+            
+            return stats;
+            
+        } catch (error) {
+            console.error('❌ Failed to get escalation stats:', error);
+            throw error;
         }
     }
 }

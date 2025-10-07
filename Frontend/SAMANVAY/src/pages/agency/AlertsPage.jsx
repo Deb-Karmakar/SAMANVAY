@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Check, Clock, RefreshCw } from 'lucide-react';
-import AlertBadge from '@/components/alerts/AlertBadge'; // Assuming this component exists
+import AlertBadge from '@/components/alerts/AlertBadge';
 
 const fetchAlerts = async () => {
     const { data } = await axiosInstance.get('/alerts');
@@ -33,27 +33,27 @@ export default function AgencyAlertsPage() {
     const [activeTab, setActiveTab] = useState('all');
 
     const { data: alertsData, isLoading, refetch } = useQuery({
-        queryKey: ['alerts'],
+        queryKey: ['myAlerts'], // Use a unique key for the agency alerts
         queryFn: fetchAlerts,
     });
 
     const acknowledgeMutation = useMutation({
         mutationFn: acknowledgeAlert,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['alerts'] });
+            queryClient.invalidateQueries({ queryKey: ['myAlerts'] });
         }
     });
 
     const snoozeMutation = useMutation({
         mutationFn: snoozeAlert,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['alerts'] });
+            queryClient.invalidateQueries({ queryKey: ['myAlerts'] });
         }
     });
 
     const handleAlertClick = (alert) => {
         if (alert.project?._id) {
-             // This automatically handles the agency role based on your existing logic
+            // The link is specific to the agency's project view
             navigate(`/agency/projects/${alert.project._id}`);
         }
     };
@@ -85,7 +85,6 @@ export default function AgencyAlertsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* KPI Cards */}
                 <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-destructive">{alertsData?.critical?.length || 0}</p><p className="text-sm text-muted-foreground">Critical</p></div><Badge variant="destructive" className="text-lg px-3 py-1">!</Badge></div></CardContent></Card>
                 <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold text-yellow-600">{alertsData?.warning?.length || 0}</p><p className="text-sm text-muted-foreground">Warning</p></div><Badge variant="default" className="bg-yellow-500 text-lg px-3 py-1">!</Badge></div></CardContent></Card>
                 <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-2xl font-bold">{alertsData?.info?.length || 0}</p><p className="text-sm text-muted-foreground">Info</p></div><Badge variant="secondary" className="text-lg px-3 py-1">i</Badge></div></CardContent></Card>
@@ -110,14 +109,20 @@ export default function AgencyAlertsPage() {
                                         <div key={alert._id} className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => handleAlertClick(alert)}>
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2"><AlertBadge severity={alert.severity} /></div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <AlertBadge severity={alert.severity} />
+                                                        {/* --- THIS IS THE NEW CODE --- */}
+                                                        {alert.escalationLevel > 0 && (
+                                                            <Badge variant="destructive" className="animate-pulse">ESCALATED</Badge>
+                                                        )}
+                                                    </div>
                                                     <p className="font-medium mb-1">{alert.message}</p>
                                                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                                         <span>Project: {alert.project?.name}</span>
                                                         <span>{new Date(alert.createdAt).toLocaleString()}</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-col sm:flex-row gap-2">
                                                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); snoozeMutation.mutate({ alertId: alert._id, days: 3 }); }} disabled={snoozeMutation.isPending}><Clock className="h-4 w-4 mr-1" />Snooze</Button>
                                                     <Button variant="default" size="sm" onClick={(e) => { e.stopPropagation(); acknowledgeMutation.mutate(alert._id); }} disabled={acknowledgeMutation.isPending}><Check className="h-4 w-4 mr-1" />Acknowledge</Button>
                                                 </div>

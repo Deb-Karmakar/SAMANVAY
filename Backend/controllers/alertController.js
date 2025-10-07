@@ -1,109 +1,153 @@
 // Backend/controllers/alertController.js
 import Alert from '../models/alertModel.js';
 import alertService from '../services/alertService.js';
+import asyncHandler from 'express-async-handler';
 
 // Get alerts for current user
-const getMyAlerts = async (req, res) => {
-    try {
-        let query = {
-            acknowledged: false,
-            autoResolved: false,
-            $or: [
-                { snoozedUntil: { $exists: false } },
-                { snoozedUntil: { $lt: new Date() } }
-            ]
-        };
-        
-        // Filter based on role
-        if (req.user.role === 'StateOfficer') {
-            // State officers see alerts for their state's projects
-            const Project = (await import('../models/projectModel.js')).default;
-            const stateProjects = await Project.find({ state: req.user.state }).select('_id');
-            query.project = { $in: stateProjects.map(p => p._id) };
-        } else if (req.user.role === 'ExecutingAgency') {
-            // Agencies see only their agency-specific alerts
-            query.agency = req.user.agencyId;
-        }
-        // CentralAdmin sees all alerts
-        
-        const alerts = await Alert.find(query)
-            .populate('project', 'name state component')
-            .populate('agency', 'name')
-            .sort({ severity: 1, createdAt: -1 }) // critical first
-            .limit(50);
-        
-        // Group by severity
-        const grouped = {
-            critical: alerts.filter(a => a.severity === 'critical'),
-            warning: alerts.filter(a => a.severity === 'warning'),
-            info: alerts.filter(a => a.severity === 'info')
-        };
-        
-        res.status(200).json({
-            total: alerts.length,
-            ...grouped,
-            allAlerts: alerts
-        });
-    } catch (error) {
-        res.status(400).json({ message: "Failed to fetch alerts", error: error.message });
-    }
-};
+const getMyAlerts = asyncHandler(async (req, res) => {
+    const query = {
+        recipient: req.user._id,
+        acknowledged: false,
+        autoResolved: false,
+        $or: [
+            { snoozedUntil: { $exists: false } },
+            { snoozedUntil: { $lt: new Date() } }
+        ]
+    };
+
+    const alerts = await Alert.find(query)
+        .populate('project', 'name state component')
+        .populate('agency', 'name')
+        .sort({ escalationLevel: -1, severity: 1, createdAt: -1 })
+        .limit(100);
+    
+    // Group by severity and escalation
+    const grouped = {
+        critical: alerts.filter(a => a.severity === 'critical'),
+        warning: alerts.filter(a => a.severity === 'warning'),
+        info: alerts.filter(a => a.severity === 'info'),
+        escalated: alerts.filter(a => a.escalationLevel > 0)
+    };
+    
+    res.status(200).json({
+        total: alerts.length,
+        ...grouped,
+        allAlerts: alerts
+    });
+});
 
 // Acknowledge an alert
-const acknowledgeAlert = async (req, res) => {
-    try {
-        const alert = await Alert.findById(req.params.id);
-        
-        if (!alert) {
-            return res.status(404).json({ message: 'Alert not found' });
-        }
-        
-        alert.acknowledged = true;
-        alert.acknowledgedBy = req.user._id;
-        alert.acknowledgedAt = new Date();
-        
-        await alert.save();
-        
-        res.status(200).json({ message: 'Alert acknowledged', alert });
-    } catch (error) {
-        res.status(400).json({ message: "Failed to acknowledge alert", error: error.message });
+const acknowledgeAlert = asyncHandler(async (req, res) => {
+    const alert = await Alert.findById(req.params.id);
+    
+    if (!alert) {
+        res.status(404);
+        throw new Error('Alert not found');
     }
-};
+    
+    // Check authorization
+    if (alert.recipient.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to acknowledge this alert');
+    }
+    
+    alert.acknowledged = true;
+    alert.acknowledgedBy = req.user._id;
+    alert.acknowledgedAt = new Date();
+    
+    await alert.save();
+    
+    res.status(200).json({ message: 'Alert acknowledged', alert });
+});
 
 // Snooze an alert
-const snoozeAlert = async (req, res) => {
-    try {
-        const { days } = req.body;
-        const alert = await Alert.findById(req.params.id);
-        
-        if (!alert) {
-            return res.status(404).json({ message: 'Alert not found' });
-        }
-        
-        const snoozeDate = new Date();
-        snoozeDate.setDate(snoozeDate.getDate() + (days || 3));
-        
-        alert.snoozedUntil = snoozeDate;
-        await alert.save();
-        
-        res.status(200).json({ message: `Alert snoozed for ${days || 3} days`, alert });
-    } catch (error) {
-        res.status(400).json({ message: "Failed to snooze alert", error: error.message });
+const snoozeAlert = asyncHandler(async (req, res) => {
+    const { days } = req.body;
+    const alert = await Alert.findById(req.params.id);
+    
+    if (!alert) {
+        res.status(404);
+        throw new Error('Alert not found');
     }
-};
+    
+    // Check authorization
+    if (alert.recipient.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to snooze this alert');
+    }
+    
+    const snoozeDate = new Date();
+    snoozeDate.setDate(snoozeDate.getDate() + (days || 3));
+    
+    alert.snoozedUntil = snoozeDate;
+    await alert.save();
+    
+    res.status(200).json({ 
+        message: `Alert snoozed for ${days || 3} days`, 
+        alert 
+    });
+});
 
 // Manually trigger alert generation (admin only)
-const generateAlerts = async (req, res) => {
-    try {
-        if (req.user.role !== 'CentralAdmin') {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
-        
-        const result = await alertService.generateAllAlerts();
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(500).json({ message: "Alert generation failed", error: error.message });
+const generateAlerts = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'CentralAdmin') {
+        res.status(403);
+        throw new Error('Not authorized');
     }
-};
+    
+    const result = await alertService.generateAllAlerts();
+    res.status(200).json(result);
+});
 
-export { getMyAlerts, acknowledgeAlert, snoozeAlert, generateAlerts };
+// NEW: Manually trigger escalation (admin only) - FOR TESTING
+const triggerEscalation = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'CentralAdmin') {
+        res.status(403);
+        throw new Error('Not authorized');
+    }
+    
+    console.log('🧪 Manual escalation triggered by admin:', req.user.email);
+    await alertService.escalateOldAlerts();
+    
+    const stats = await alertService.getEscalationStats();
+    
+    res.status(200).json({
+        success: true,
+        message: 'Escalation process completed',
+        stats
+    });
+});
+
+// NEW: Run full nightly job manually (admin only) - FOR TESTING
+const runNightlyJob = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'CentralAdmin') {
+        res.status(403);
+        throw new Error('Not authorized');
+    }
+    
+    console.log('🌙 Manual nightly job triggered by admin:', req.user.email);
+    const result = await alertService.runNightlyJob();
+    
+    res.status(200).json(result);
+});
+
+// NEW: Get escalation statistics (admin only)
+const getEscalationStats = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'CentralAdmin') {
+        res.status(403);
+        throw new Error('Not authorized');
+    }
+    
+    const stats = await alertService.getEscalationStats();
+    res.status(200).json(stats);
+});
+
+export { 
+    getMyAlerts, 
+    acknowledgeAlert, 
+    snoozeAlert, 
+    generateAlerts,
+    triggerEscalation,
+    runNightlyJob,
+    getEscalationStats
+};

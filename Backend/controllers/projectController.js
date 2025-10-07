@@ -436,6 +436,8 @@ const submitMilestoneForReview = async (req, res) => {
 
 // @desc   Review milestone (approve/reject) - State Officer only
 // @route  PUT /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/review
+// In Backend/controllers/projectController.js
+
 const reviewMilestone = asyncHandler(async (req, res) => {
     const { projectId, assignmentIndex, checklistIndex } = req.params;
     const { action, comments } = req.body;
@@ -451,9 +453,21 @@ const reviewMilestone = asyncHandler(async (req, res) => {
         res.status(403);
         throw new Error('Not authorized for this project');
     }
+    
+    const aIndex = parseInt(assignmentIndex, 10);
+    const cIndex = parseInt(checklistIndex, 10);
 
-    const assignment = project.assignments[assignmentIndex];
-    const milestone = assignment.checklist[checklistIndex];
+    const assignment = project.assignments[aIndex];
+    if (!assignment) {
+        res.status(404);
+        throw new Error('Assignment not found');
+    }
+
+    const milestone = assignment.checklist[cIndex];
+    if (!milestone) {
+        res.status(404);
+        throw new Error('Milestone not found');
+    }
 
     if (milestone.status !== 'Pending Review') {
         res.status(400);
@@ -475,7 +489,7 @@ const reviewMilestone = asyncHandler(async (req, res) => {
         throw new Error('Invalid action. Must be "approve" or "reject".');
     }
     
-    // Recalculate project progress based on ALL assignments
+    // Recalculate project progress
     let totalMilestones = 0;
     let completedMilestones = 0;
     project.assignments.forEach(ass => {
@@ -495,18 +509,7 @@ const reviewMilestone = asyncHandler(async (req, res) => {
 
     await project.save();
 
-    // --- 2. ALERT CREATION LOGIC ADDED ---
-    // Create an in-app alert for the submitting agency
-    await Alert.create({
-        type: 'milestone_reviewed',
-        severity: 'info',
-        project: project._id,
-        agency: assignment.agency._id,
-        message: `Your milestone "${milestone.text}" for "${project.name}" was ${milestone.status}. ${comments || ''}`,
-        metadata: { status: milestone.status, comments: comments }
-    });
-
-    // Send email to agency
+    // Find the agency user to notify
     const agencyUser = await User.findOne({
         role: 'ExecutingAgency',
         agencyId: assignment.agency._id,
@@ -514,6 +517,18 @@ const reviewMilestone = asyncHandler(async (req, res) => {
     });
 
     if (agencyUser) {
+        // --- ADDED: Create an in-app alert for the agency ---
+        await Alert.create({
+            recipient: agencyUser._id,
+            type: 'milestone_reviewed',
+            severity: 'info',
+            project: project._id,
+            agency: assignment.agency._id,
+            message: `Your milestone "${milestone.text}" for "${project.name}" was ${milestone.status}. ${comments || ''}`,
+            metadata: { status: milestone.status, comments: comments }
+        });
+
+        // --- Send email to agency (your existing logic) ---
         const emailContent = emailTemplates.milestoneReviewed(
             project.name,
             milestone.text,
@@ -530,17 +545,14 @@ const reviewMilestone = asyncHandler(async (req, res) => {
                 event: 'milestone_reviewed',
                 project: project._id,
                 sender: req.user._id,
-                recipient: {
-                    email: agencyUser.email,
-                    userId: agencyUser._id
-                },
+                recipient: { email: agencyUser.email, userId: agencyUser._id },
                 subject: emailContent.subject,
                 status: 'sent',
                 metadata: { action, milestone: milestone.text },
                 sentAt: new Date()
             });
         } catch (emailError) {
-            console.error('Email failed:', emailError);
+            console.error('Email failed during milestone review notification:', emailError);
         }
     }
 

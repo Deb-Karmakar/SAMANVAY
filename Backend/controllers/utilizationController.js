@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer';
 import UtilizationReport from '../models/utilizationReportModel.js';
 import Project from '../models/projectModel.js';
 import User from '../models/userModel.js';
+import Alert from '../models/alertModel.js';
 import { sendEmail, emailTemplates } from '../utils/emailService.js';
 
 // @desc    Submit a new utilization report
@@ -96,6 +97,8 @@ export const getPendingReportsForState = asyncHandler(async (req, res) => {
 // @desc    Review (approve/reject) a utilization report
 // @route   PUT /api/utilization/:id/review
 // @access  Private/StateOfficer
+// In Backend/controllers/utilizationController.js
+
 export const reviewUtilizationReport = asyncHandler(async (req, res) => {
     const { status, reviewComments } = req.body; // status should be 'Approved' or 'Rejected'
 
@@ -107,7 +110,7 @@ export const reviewUtilizationReport = asyncHandler(async (req, res) => {
     const report = await UtilizationReport.findById(req.params.id)
         .populate('project', 'name state')
         .populate('agency', 'name')
-        .populate('submittedBy', 'email');
+        .populate('submittedBy', 'email _id'); // Ensure we get the _id for the recipient
 
     if (!report) {
         res.status(404);
@@ -127,8 +130,21 @@ export const reviewUtilizationReport = asyncHandler(async (req, res) => {
     report.reviewedAt = Date.now();
     const updatedReport = await report.save();
     
-    // Send email notification back to the submitting agency
+    // Send notifications back to the submitting agency
     if (report.submittedBy && report.submittedBy.email) {
+        
+        // --- ADDED: Create an in-app alert for the agency ---
+        await Alert.create({
+            recipient: report.submittedBy._id,
+            type: 'utilization_reviewed',
+            severity: 'info',
+            project: report.project._id,
+            agency: report.agency._id,
+            message: `Your utilization report of ₹${(report.amount / 100000).toFixed(2)} Lakhs for "${report.project.name}" has been ${report.status}.`,
+            metadata: { status: report.status, comments: reviewComments }
+        });
+
+        // --- Send email notification (your existing logic) ---
         const emailContent = emailTemplates.utilizationReportReviewed(
             report.agency.name,
             report.project.name,
