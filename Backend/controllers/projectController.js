@@ -7,6 +7,7 @@ import { sendEmail, emailTemplates } from '../utils/emailService.js';
 import { generateProjectApprovalPDF, generateAssignmentOrderPDF } from '../utils/pdfService.js';
 import CommunicationLog from '../models/communicationLogModel.js';
 import asyncHandler from 'express-async-handler'; // Recommended for cleaner async/await
+import { getCoordsForProject } from '../utils/geocoder.js';
 
 // @desc   Create a new project
 // @route  POST /api/projects
@@ -14,12 +15,25 @@ const createProject = async (req, res) => {
     try {
         console.log('📝 Creating project with data:', req.body);
         
-        const project = new Project({ ...req.body, createdBy: req.user._id });
+        // 1. Create project data object and add geocoding BEFORE creating project instance
+        const projectData = { ...req.body, createdBy: req.user._id };
+
+        // 2. Run geocoding logic before creating the Project instance
+        if (projectData.district && projectData.state) {
+            const location = getCoordsForProject(projectData.district, projectData.state);
+            if (location) {
+                projectData.location = location;
+                console.log(`📍 Geocoded project to ${projectData.district}, ${projectData.state}`);
+            }
+        }
+
+        // 3. Now create and save the project with all data included
+        const project = new Project(projectData);
         const createdProject = await project.save();
         
         console.log('✅ Project created:', createdProject._id);
 
-        // Generate PDF
+        // 4. Continue with PDF generation and email notifications
         console.log('📄 Generating PDF...');
         const pdfResult = await generateProjectApprovalPDF(createdProject);
         console.log('✅ PDF generated:', pdfResult.filename);
@@ -555,6 +569,13 @@ const getProjectsWithPendingReviews = async (req, res) => {
     }
 };
 
+const getProjectLocations = asyncHandler(async (req, res) => {
+    const projects = await Project.find({ 'location.coordinates': { $exists: true, $ne: [] } })
+        .select('name status component location budget progress state');
+
+    res.json(projects);
+});
+
 // Export ALL functions
 export { 
     createProject, 
@@ -566,5 +587,6 @@ export {
     getMyAgencyProjects,
     submitMilestoneForReview,
     reviewMilestone,
-    getProjectsWithPendingReviews
+    getProjectsWithPendingReviews,
+    getProjectLocations
 };

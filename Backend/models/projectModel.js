@@ -1,8 +1,10 @@
 // Backend/models/projectModel.js
+import mongoose from 'mongoose';
+
 const projectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     state: { type: String, required: true },
-    district: { type: String },
+    district: { type: String, required: true },
     component: { 
         type: String, 
         required: true,
@@ -48,6 +50,18 @@ const projectSchema = new mongoose.Schema({
         }]
     }],
     
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            index: '2dsphere' // Important for geographic queries
+        }
+    },
+
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
