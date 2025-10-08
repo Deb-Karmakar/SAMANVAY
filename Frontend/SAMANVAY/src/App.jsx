@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AlertsPage from '@/pages/shared/AlertsPage';
+import ChatBot from './components/chatbot/ChatBot';
 
 // Admin Layout and Page Imports
 import AdminLayout from "@/components/layouts/AdminLayout";
@@ -30,8 +31,7 @@ import StateCommunications from "@/pages/state/CommunicationsPage";
 import StateProjectDetail from "@/pages/state/ProjectDetailPage";
 import ReviewsPage from "@/pages/state/ReviewsPage";
 
-
-// 1. Import Agency Layout and Pages
+// Agency Layout and Page Imports
 import AgencyLayout from "@/components/layouts/AgencyLayout";
 import AgencyDashboard from "@/pages/agency/DashboardPage";
 import AgencyProjectsList from "@/pages/agency/ProjectsListPage";
@@ -67,9 +67,8 @@ function Router() {
         <Route path="projects" element={<AdminProjects />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="communications" element={<CommunicationsPage />} />
-        <Route path="/admin/projects/:projectId" element={<AdminProjectDetail />} />
-        <Route path="/admin/alerts" element={<AlertsPage />} />
-        <Route path="/admin/pfms" element={<PFMSDashboardPage />} />
+        <Route path="projects/:projectId" element={<AdminProjectDetail />} />
+        <Route path="pfms" element={<PFMSDashboardPage />} />
       </Route>
 
       {/* State Officer Nested Routes */}
@@ -78,15 +77,15 @@ function Router() {
         <Route path="dashboard" element={<StateDashboard />} />
         <Route path="map" element={<StateMap />} />
         <Route path="projects" element={<StateProjects />} />
-        <Route path="projects/:projectId" element={<StateProjectDetail />} /> {/* <-- Add this dynamic route */}
+        <Route path="projects/:projectId" element={<StateProjectDetail />} />
         <Route path="agencies" element={<StateAgencies />} />
         <Route path="funds" element={<StateFunds />} />
         <Route path="communications" element={<StateCommunications />} />
         <Route path="reviews" element={<ReviewsPage />} />
-        <Route path="/state/alerts" element={<AlertsPage />} />
+        <Route path="alerts" element={<AlertsPage />} />
       </Route>
 
-      {/* 2. Add Executing Agency Nested Routes */}
+      {/* Executing Agency Nested Routes */}
       <Route path="/agency" element={<AgencyLayout />}>
         <Route index element={<AgencyDashboard />} />
         <Route path="dashboard" element={<AgencyDashboard />} />
@@ -95,7 +94,7 @@ function Router() {
         <Route path="map" element={<AgencyMap />} />
         <Route path="funds" element={<AgencyFunds />} />
         <Route path="inbox" element={<AgencyInbox />} />
-        <Route path="/agency/alerts" element={<AlertsPage />} />
+        <Route path="alerts" element={<AlertsPage />} />
       </Route>
 
       {/* Catch-all Not Found Route */}
@@ -109,8 +108,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <Toaster />
+          {/* Main Router */}
           <Router />
+          
+          {/* Global Toaster */}
+          <Toaster />
+          
+          {/* AI ChatBot - handles its own auth check */}
+          <ChatBot />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
