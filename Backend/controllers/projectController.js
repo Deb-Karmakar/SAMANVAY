@@ -582,9 +582,21 @@ const getProjectsWithPendingReviews = async (req, res) => {
 };
 
 const getProjectLocations = asyncHandler(async (req, res) => {
-    const projects = await Project.find({ 'location.coordinates': { $exists: true, $ne: [] } })
-        .select('name status component location budget progress state');
+    console.log('🗺️ GET PROJECT LOCATIONS - User role:', req.user.role);
+    
+    // Allow Admin OR CentralAdmin
+    if (req.user.role !== 'Admin' && req.user.role !== 'CentralAdmin') {
+        console.log('❌ Authorization failed - User is not admin');
+        return res.status(403).json({ message: 'Only admins can view all project locations' });
+    }
 
+    console.log('✅ Authorization passed - Fetching locations');
+    
+    const projects = await Project.find({ 
+        'location.coordinates': { $exists: true, $ne: [] } 
+    }).select('name status component location budget progress state district');
+
+    console.log(`✅ Found ${projects.length} projects with locations`);
     res.json(projects);
 });
 

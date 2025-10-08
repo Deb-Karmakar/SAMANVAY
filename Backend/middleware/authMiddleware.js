@@ -1,8 +1,8 @@
-// Backend/middleware/authMiddleware.js (Updated)
+// Backend/middleware/authMiddleware.js (FIXED)
 
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
-import asyncHandler from 'express-async-handler'; // Recommended for error handling
+import asyncHandler from 'express-async-handler';
 
 const protect = asyncHandler(async (req, res, next) => {
     let token;
@@ -12,28 +12,35 @@ const protect = asyncHandler(async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = await User.findById(decoded.userId).select('-password');
+            
+            if (!req.user) {
+                res.status(401);
+                throw new Error('User not found');
+            }
+            
+            console.log('✅ Authenticated user:', req.user.email, 'Role:', req.user.role);
             next();
         } catch (error) {
+            console.error('❌ Token verification failed:', error.message);
             res.status(401);
             throw new Error('Not authorized, token failed');
         }
-    }
-
-    if (!token) {
+    } else {
+        console.error('❌ No token provided');
         res.status(401);
         throw new Error('Not authorized, no token');
     }
 });
 
 const isAdmin = (req, res, next) => {
-    if (req.user && req.user.role === 'CentralAdmin') {
+    // ✅ FIXED: Added parentheses for correct operator precedence
+    if (req.user && (req.user.role === 'CentralAdmin' || req.user.role === 'Admin')) {
         next();
     } else {
         res.status(403).json({ message: 'Not authorized as an admin' });
     }
 };
 
-// --- NEW MIDDLEWARE ---
 const isStateOfficer = (req, res, next) => {
     if (req.user && req.user.role === 'StateOfficer' && req.user.state) {
         next();
@@ -41,7 +48,8 @@ const isStateOfficer = (req, res, next) => {
         res.status(403).json({ message: 'Not authorized as a state officer' });
     }
 };
- const isExecutingAgency = (req, res, next) => {
+
+const isExecutingAgency = (req, res, next) => {
     if (req.user && req.user.role === 'ExecutingAgency' && req.user.agencyId) {
         next();
     } else {
@@ -49,5 +57,4 @@ const isStateOfficer = (req, res, next) => {
     }
 };
 
-// Update the exports at the bottom of the file
 export { protect, isAdmin, isStateOfficer, isExecutingAgency };

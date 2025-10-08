@@ -12,6 +12,7 @@ import alertRoutes from './routes/alertRoutes.js';
 import fundRoutes from './routes/fundRoutes.js'
 import utilizationRoutes from './routes/utilizationRoutes.js';
 import pfmsRoutes from './routes/pfmsRoutes.js'
+import reportRoutes from './routes/reportRoutes.js';
 
 import { initializePFMSCronJobs } from './services/pfmsCronService.js';
 import { startAlertCron } from './services/cronService.js';
@@ -60,6 +61,7 @@ app.use('/api/test', testRoutes);
 app.use('/uploads/pdfs', express.static(path.join(__dirname, 'uploads/pdfs')));
 app.use('/api/alerts', alertRoutes);
 app.use('/api/pfms', pfmsRoutes);
+app.use('/api/reports', reportRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
