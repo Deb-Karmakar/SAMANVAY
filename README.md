@@ -1,44 +1,105 @@
 # SAMANVAY - System for Agency Mapping And Nodal VAYavastha
 
 ![SAMANVAY Logo](https://img.shields.io/badge/SAMANVAY-System%20for%20Agency%20Mapping-blue?style=for-the-badge)
+![PM-AJAY](https://img.shields.io/badge/PM--AJAY-Management%20System-green?style=for-the-badge)
+![Node.js](https://img.shields.io/badge/Node.js-18.x-brightgreen?style=flat-square&logo=node.js)
+![React](https://img.shields.io/badge/React-19.x-blue?style=flat-square&logo=react)
+![MongoDB](https://img.shields.io/badge/MongoDB-6.x-green?style=flat-square&logo=mongodb)
 
-**SAMANVAY** is a comprehensive digital platform designed to streamline coordination between government agencies and implementing bodies for effective project management and resource allocation. The system provides real-time monitoring, financial tracking through PFMS integration, and intelligent alert systems to ensure efficient project execution.
+**SAMANVAY** is a comprehensive digital platform specifically designed for the **PM-AJAY (Prime Minister's Atal Jyoti Abhiyan Yojana)** scheme management. The system streamlines coordination between government agencies and implementing bodies for effective project management, real-time monitoring, financial tracking through PFMS integration, and intelligent alert systems with automated escalation workflows.
 
 ## 🏛️ Project Overview
 
-SAMANVAY serves as a unified platform that enables states to coordinate projects with multiple implementing and executing agencies. It provides three distinct user roles with specialized dashboards and functionalities:
+SAMANVAY serves as the unified digital backbone for PM-AJAY scheme implementation across India. It manages three major components:
+- **Adarsh Gram** (Model Village) projects
+- **GIA** (Grant-in-Aid) programs  
+- **Hostel** construction and maintenance projects
 
-- **Central Admin**: National-level oversight and policy implementation
-- **State Officers**: State-level project management and agency coordination  
-- **Executing Agencies**: Ground-level project execution and reporting
+The platform provides three distinct user roles with specialized dashboards and role-based access control:
+
+- **Central Admin**: National-level oversight, PFMS data management, and policy implementation
+- **State Officers**: State-level project management, agency coordination, and progress monitoring
+- **Executing Agencies**: Ground-level project execution, milestone tracking, and utilization reporting
 
 ## ✨ Key Features
 
 ### 🎯 Core Functionalities
-- **Multi-Role Dashboard System** with role-based access control
-- **Project Lifecycle Management** from initiation to completion
-- **Agency Onboarding and Management** with approval workflows
-- **Real-time Project Tracking** with progress monitoring
-- **Financial Management** with budget allocation and utilization tracking
-- **PFMS Integration** for seamless financial data synchronization
-- **Intelligent Alert System** with automated notifications and escalations
-- **Interactive Mapping** with geolocation-based project visualization
-- **Communication Hub** for stakeholder coordination
-- **Report Generation** with comprehensive analytics
+- **Three-Tier Role System**: Central Admin, State Officers, and Executing Agencies with distinct permissions
+- **Project Lifecycle Management**: Complete workflow from project creation to completion
+- **Agency Management**: Registration, onboarding, and assignment workflows
+- **Milestone Tracking**: Checklist-based project monitoring with proof of work uploads
+- **Financial Integration**: Real-time PFMS data synchronization and utilization reporting
+- **Geographic Visualization**: Interactive maps with project locations using Leaflet
+- **Document Management**: PDF generation for project approvals and assignment orders
+- **Communication System**: Email notifications and in-app messaging
+- **Progress Monitoring**: Real-time status updates and completion tracking
 
-### 📊 Advanced Analytics
-- **Predictive Analytics** for project completion forecasting
-- **Performance Metrics** with state-wise comparisons
-- **Financial Utilization Analysis** with trend predictions
-- **Risk Assessment** with automated scoring
-- **Custom Report Generation** with multiple export formats
+### 📊 Advanced Analytics & Dashboards
+- **Admin Dashboard**: National-level overview with state performance metrics
+- **State Dashboard**: State-specific project tracking and agency performance
+- **Agency Dashboard**: Project assignments, deadlines, and budget utilization
+- **PFMS Dashboard**: Financial data visualization with quarterly trends
+- **Performance Analytics**: State comparisons, agency rankings, and completion rates
+- **Budget Analysis**: Allocation vs utilization with trend forecasting
+- **Predictive Insights**: Risk scoring and performance predictions
 
-### 🔔 Smart Alert System
-- **Automated Notifications** for deadline reminders
-- **Escalation Workflows** with multi-level alerts
-- **Performance-based Alerts** for slow progress detection
-- **Budget Overrun Warnings** with threshold monitoring
-- **Review Status Tracking** with approval workflows
+### 🔔 Intelligent Alert System
+- **Multi-Level Escalation**: Agency → State → Admin escalation workflow
+- **Automated Alert Generation**: Deadline tracking, inactivity detection, review delays
+- **Smart Notifications**: Email + in-app alerts with snooze functionality
+- **Performance-Based Alerts**: High rejection rates, consecutive failures
+- **Timeline Alerts**: Behind schedule detection, milestone overdue warnings
+- **Auto-Resolution**: Alerts automatically resolve when conditions improve
+- **Escalation Analytics**: Statistics and tracking for unresolved issues
+
+### 🏦 PFMS Integration Features
+- **Real-time Data Sync**: Daily, weekly, and monthly PFMS data synchronization
+- **Financial Tracking**: Fund release, utilization, and pending amounts
+- **State-wise Analysis**: Component breakdown by Adarsh Gram, GIA, and Hostel
+- **Quarterly Reporting**: Automated trend analysis and performance metrics
+- **Utilization Certificates**: PDF generation and approval workflows
+- **Budget Reconciliation**: Project data integration with PFMS figures
+- **Predictive Analytics**: Risk assessment and utilization forecasting
+
+## ⚙️ Automated Systems
+
+### 🔔 Alert System Architecture
+
+The SAMANVAY alert system uses a sophisticated multi-level escalation mechanism:
+
+**Alert Types:**
+- `deadline_approaching`: Projects nearing completion deadlines
+- `inactive_project`: No activity for 14+ days
+- `behind_schedule`: Progress below expected timeline
+- `high_rejection_rate`: Agency rejection rate >40%
+- `consecutive_rejections`: 2+ consecutive milestone rejections
+- `slow_review`: State officer review pending 3+ days
+- `milestone_due_soon`: Milestone due in ≤3 days
+- `milestone_overdue`: Past due milestones
+
+**Escalation Workflow:**
+1. **Level 0**: Original alert sent to responsible party
+2. **Level 1**: After 2 days → Escalated to State Officer
+3. **Level 2**: After 5 days → Escalated to Central Admin
+
+**Auto-Resolution:** Alerts automatically resolve when conditions improve
+
+### ⏰ Cron Job Schedule
+
+**Alert Processing (Daily 2:00 AM IST):**
+```javascript
+// Nightly Job Workflow:
+1. Generate new alerts for all active projects
+2. Update project statuses based on progress
+3. Escalate unacknowledged alerts
+4. Auto-resolve fixed conditions
+5. Send email notifications
+```
+
+**PFMS Synchronization:**
+- **Daily Sync**: 3:00 AM IST - PFMS data + project reconciliation
+- **Weekly Analysis**: Sunday 1:00 AM IST - Comprehensive analysis
+- **Monthly Reconciliation**: 1st of month 2:00 AM IST - Full reconciliation
 
 ## 🏗️ System Architecture
 
@@ -166,6 +227,7 @@ nano .env
 
 **Frontend Environment Variables:**
 ```env
+VITE_API_URL=http://localhost:5000/api
 VITE_API_BASE_URL=http://localhost:5000/api
 VITE_APP_NAME=SAMANVAY
 ```
@@ -257,14 +319,18 @@ Password: admin123
 ```javascript
 {
   fullName: String,
-  email: String (unique),
-  password: String (hashed),
+  email: String (unique, indexed),
+  password: String (bcrypt hashed),
   mobile: String,
   role: Enum ['CentralAdmin', 'StateOfficer', 'ExecutingAgency'],
-  state: String,
-  district: String,
-  agencyId: ObjectId,
-  isActive: Boolean
+  state: String,           // For StateOfficer & ExecutingAgency
+  district: String,        // For ExecutingAgency
+  designation: String,     // For CentralAdmin
+  agencyName: String,      // For ExecutingAgency
+  agencyType: String,      // For ExecutingAgency
+  agencyId: ObjectId,      // Reference to Agency
+  isActive: Boolean,
+  timestamps: true
 }
 ```
 
@@ -280,9 +346,31 @@ Password: admin123
   budget: Number,
   startDate: Date,
   endDate: Date,
-  assignments: [AgencyAssignment],
-  location: GeoJSON Point,
-  createdBy: ObjectId
+  
+  // Assignment structure with embedded checklists
+  assignments: [{
+    agency: ObjectId (ref: Agency),
+    allocatedFunds: Number,
+    checklist: [{
+      text: String,
+      completed: Boolean,
+      status: Enum ['Not Started', 'Pending Review', 'Approved', 'Rejected'],
+      proofImages: [String],  // File URLs
+      submittedAt: Date,
+      reviewedAt: Date,
+      reviewedBy: ObjectId (ref: User),
+      reviewComments: String
+    }]
+  }],
+  
+  // GeoJSON for mapping
+  location: {
+    type: 'Point',
+    coordinates: [Number, Number]  // [longitude, latitude]
+  },
+  
+  createdBy: ObjectId (ref: User),
+  timestamps: true
 }
 ```
 
@@ -295,7 +383,110 @@ Password: admin123
   district: String,
   contactPerson: String,
   email: String,
-  status: Enum ['Active', 'Onboarding', 'Inactive']
+  status: Enum ['Active', 'Onboarding', 'Inactive'],
+  timestamps: true
+}
+```
+
+**Alert Model:**
+```javascript
+{
+  recipient: ObjectId (ref: User, indexed),
+  escalationLevel: Number (0=Normal, 1=State, 2=Admin),
+  type: String (40+ alert types including escalated variants),
+  severity: Enum ['critical', 'warning', 'info'],
+  project: ObjectId (ref: Project, indexed),
+  agency: ObjectId (ref: Agency),
+  message: String,
+  metadata: Mixed,
+  
+  // Status tracking
+  acknowledged: Boolean (indexed),
+  acknowledgedBy: ObjectId (ref: User),
+  acknowledgedAt: Date,
+  autoResolved: Boolean (indexed),
+  resolvedAt: Date,
+  snoozedUntil: Date,
+  timestamps: true
+}
+```
+
+**PFMS Data Model:**
+```javascript
+{
+  fiscalYear: String (unique, indexed),
+  
+  // National totals
+  totalAllocated: Number,
+  totalReleased: Number,
+  totalUtilized: Number,
+  totalPending: Number,
+  nationalUtilizationRate: Number,
+  nationalReleaseRate: Number,
+  
+  // Component breakdown
+  componentBreakdown: [{
+    component: Enum ['Adarsh Gram', 'GIA', 'Hostel'],
+    allocated: Number,
+    released: Number,
+    utilized: Number,
+    pending: Number,
+    projects: Number,
+    completedProjects: Number
+  }],
+  
+  // State-wise data
+  stateBreakdown: [{
+    state: String,
+    allocated: Number,
+    released: Number,
+    utilized: Number,
+    pending: Number,
+    utilizationRate: Number,
+    releaseRate: Number,
+    performance: Enum ['Excellent', 'Good', 'Average', 'Poor'],
+    components: [ComponentBreakdown],
+    lastSync: Date
+  }],
+  
+  // Quarterly trends
+  quarterlyData: [{
+    quarter: Enum ['Q1', 'Q2', 'Q3', 'Q4'],
+    released: Number,
+    utilized: Number,
+    projects: Number
+  }],
+  
+  // AI/ML predictions
+  predictions: {
+    projectedUtilization: Number,
+    projectedCompletion: Number,
+    riskScore: Number (0-100),
+    recommendations: [String]
+  },
+  
+  // Sync metadata
+  lastSyncedAt: Date,
+  syncStatus: Enum ['Success', 'Partial', 'Failed', 'In Progress'],
+  dataSource: Enum ['PFMS_API', 'Manual_Entry', 'Auto_Calculated', 'Real_Project_Data'],
+  timestamps: true
+}
+```
+
+**Utilization Report Model:**
+```javascript
+{
+  project: ObjectId (ref: Project),
+  agency: ObjectId (ref: Agency),
+  amount: Number,
+  certificateUrl: String,  // PDF file path
+  comments: String,
+  submittedBy: ObjectId (ref: User),
+  status: Enum ['Pending Approval', 'Approved', 'Rejected'],
+  reviewedBy: ObjectId (ref: User),
+  reviewComments: String,
+  reviewedAt: Date,
+  timestamps: true
 }
 ```
 
@@ -303,41 +494,89 @@ Password: admin123
 
 ### Authentication Endpoints
 ```
-POST /api/users/register    # User registration
-POST /api/users/login      # User authentication
-POST /api/users/refresh    # Token refresh
+POST /api/users/register     # User registration (all roles)
+POST /api/users/login       # User authentication with role-based redirection
+```
+
+### Dashboard Endpoints
+```
+# Admin Dashboard
+GET /api/dashboard/stats                    # Key metrics (projects, agencies, alerts)
+GET /api/dashboard/project-status-chart     # Project status distribution
+GET /api/dashboard/state-performance        # State-wise completion rates
+GET /api/dashboard/budget-trends            # Monthly budget allocation/utilization
+GET /api/dashboard/component-breakdown      # Adarsh Gram/GIA/Hostel distribution
+GET /api/dashboard/top-agencies            # Best performing agencies
+GET /api/dashboard/recent-activity          # Latest system activities
+
+# State Dashboard
+GET /api/dashboard/state-stats              # State-specific statistics
+GET /api/dashboard/pending-approvals        # Projects/milestones awaiting review
+GET /api/dashboard/district-breakdown       # District-wise project data
+
+# Agency Dashboard  
+GET /api/dashboard/agency-stats             # Agency-specific metrics
+GET /api/dashboard/upcoming-deadlines       # Project and milestone deadlines
+GET /api/dashboard/agency-budget            # Budget allocation and utilization
 ```
 
 ### Project Management
 ```
-GET    /api/projects          # List projects
-POST   /api/projects          # Create project
-GET    /api/projects/:id      # Get project details
-PUT    /api/projects/:id      # Update project
-DELETE /api/projects/:id      # Delete project
+GET  /api/projects                  # List all projects (admin)
+POST /api/projects                  # Create new project with PDF generation
+GET  /api/projects/:id              # Get project details (role-filtered)
+GET  /api/projects/mystate          # State officer's projects
+GET  /api/projects/myagency         # Agency's assigned projects
+GET  /api/projects/pending-reviews  # Projects with pending milestone reviews
+GET  /api/projects/locations        # Project coordinates for mapping
+
+# Project Assignment & Reviews
+PUT  /api/projects/:id/assign                                    # Assign agencies to project
+POST /api/projects/:id/assignments                               # Add new agency assignments
+PUT  /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/submit  # Submit milestone
+PUT  /api/projects/:projectId/checklist/:assignmentIndex/:checklistIndex/review  # Review milestone
 ```
 
 ### Agency Management
 ```
-GET    /api/agencies          # List agencies
-POST   /api/agencies          # Create agency
-PUT    /api/agencies/:id      # Update agency
-DELETE /api/agencies/:id      # Delete agency
-```
-
-### Financial Management
-```
-GET /api/funds               # Fund allocation data
-GET /api/utilization         # Utilization reports
-POST /api/utilization        # Submit utilization report
-GET /api/pfms                # PFMS integrated data
+GET    /api/agencies          # List agencies (filtered by role)
+POST   /api/agencies          # Register new agency
+PUT    /api/agencies/:id      # Update agency details
+DELETE /api/agencies/:id      # Remove agency
 ```
 
 ### Alert System
 ```
-GET    /api/alerts           # Get user alerts
-PUT    /api/alerts/:id/ack   # Acknowledge alert
-POST   /api/alerts/snooze    # Snooze alert
+GET  /api/alerts                    # Get user's alerts (grouped by severity)
+PUT  /api/alerts/:id/acknowledge    # Acknowledge specific alert
+PUT  /api/alerts/:id/snooze        # Snooze alert for specified days
+
+# Admin Alert Management
+POST /api/alerts/generate           # Manually trigger alert generation
+POST /api/alerts/escalate          # Manual escalation testing
+POST /api/alerts/nightly-job       # Run complete nightly alert processing
+GET  /api/alerts/escalation-stats  # Get escalation level statistics
+```
+
+### Financial Management & PFMS
+```
+GET  /api/funds                     # Fund allocation data
+GET  /api/utilization              # Utilization report listings
+POST /api/utilization              # Submit utilization certificate
+GET  /api/pfms                     # PFMS dashboard data
+GET  /api/pfms/state/:state        # State-specific PFMS data
+```
+
+### File Upload
+```
+POST /api/upload/images             # Upload milestone proof images
+POST /api/upload/certificates       # Upload utilization certificates (PDF)
+```
+
+### Communication & Messaging
+```
+GET  /api/communications            # Communication logs and messages
+POST /api/communications            # Send notifications/messages
 ```
 
 ## 📱 PWA Features
