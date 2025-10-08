@@ -100,43 +100,7 @@ const navLinks = [
 ];
 
 // --- State Quick Stats Component ---
-const StateQuickStats = () => {
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 px-4 md:px-0">
-            <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <Activity className="w-5 h-5 opacity-80" />
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <div className="text-2xl font-bold">48</div>
-                <div className="text-xs opacity-90">State Projects</div>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <IndianRupee className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">+8%</span>
-                </div>
-                <div className="text-2xl font-bold">₹12.3L</div>
-                <div className="text-xs opacity-90">Funds Allocated</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <Building2 className="w-5 h-5 opacity-80" />
-                </div>
-                <div className="text-2xl font-bold">23</div>
-                <div className="text-xs opacity-90">Active Agencies</div>
-            </div>
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <TrendingUp className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">Good</span>
-                </div>
-                <div className="text-2xl font-bold">87%</div>
-                <div className="text-xs opacity-90">Performance</div>
-            </div>
-        </div>
-    );
-};
+
 
 // --- Main Layout Component ---
 export default function StateLayout() {
@@ -166,7 +130,6 @@ export default function StateLayout() {
                 {/* Main Content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto">
                     <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 max-w-7xl">
-                        {location.pathname === '/state/dashboard' && <StateQuickStats />}
                         <Outlet />
                     </div>
                 </main>

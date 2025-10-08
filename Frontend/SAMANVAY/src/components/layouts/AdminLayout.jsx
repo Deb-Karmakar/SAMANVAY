@@ -112,43 +112,7 @@ const navLinks = [
 ];
 
 // --- Quick Stats Component ---
-const QuickStats = () => {
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 px-4 md:px-0">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <Activity className="w-5 h-5 opacity-80" />
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Live</span>
-                </div>
-                <div className="text-2xl font-bold">234</div>
-                <div className="text-xs opacity-90">Active Projects</div>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <IndianRupee className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">+12%</span>
-                </div>
-                <div className="text-2xl font-bold">₹45.2L</div>
-                <div className="text-xs opacity-90">Funds Released</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <BookUser className="w-5 h-5 opacity-80" />
-                </div>
-                <div className="text-2xl font-bold">89</div>
-                <div className="text-xs opacity-90">Active Agencies</div>
-            </div>
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <Timer className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">On Track</span>
-                </div>
-                <div className="text-2xl font-bold">92%</div>
-                <div className="text-xs opacity-90">Completion Rate</div>
-            </div>
-        </div>
-    );
-};
+
 
 // --- Main Layout Component ---
 export default function AdminLayout() {
@@ -178,7 +142,6 @@ export default function AdminLayout() {
                 {/* Main Content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto">
                     <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 max-w-7xl">
-                        {location.pathname === '/admin/dashboard' && <QuickStats />}
                         <Outlet />
                     </div>
                 </main>

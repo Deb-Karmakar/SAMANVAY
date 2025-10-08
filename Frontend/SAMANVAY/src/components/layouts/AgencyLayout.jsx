@@ -32,7 +32,9 @@ import {
     Activity,
     TrendingUp,
     FileText,
-    Calendar
+    Calendar,
+    Clock,
+    CheckCircle2 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -79,43 +81,6 @@ const navLinks = [
 ];
 
 // --- Agency Quick Stats Component ---
-const AgencyQuickStats = () => {
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 px-4 md:px-0">
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <ClipboardList className="w-5 h-5 opacity-80" />
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <div className="text-2xl font-bold">12</div>
-                <div className="text-xs opacity-90">Total Projects</div>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <IndianRupee className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">Released</span>
-                </div>
-                <div className="text-2xl font-bold">₹8.7L</div>
-                <div className="text-xs opacity-90">Fund Received</div>
-            </div>
-            <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <Clock className="w-5 h-5 opacity-80" />
-                </div>
-                <div className="text-2xl font-bold">5</div>
-                <div className="text-xs opacity-90">In Progress</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white">
-                <div className="flex items-center justify-between mb-2">
-                    <CheckCircle2 className="w-5 h-5 opacity-80" />
-                    <span className="text-xs">75%</span>
-                </div>
-                <div className="text-2xl font-bold">3</div>
-                <div className="text-xs opacity-90">Completed</div>
-            </div>
-        </div>
-    );
-};
 
 // --- Main Layout Component ---
 export default function AgencyLayout() {
@@ -145,7 +110,6 @@ export default function AgencyLayout() {
                 {/* Main Content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto">
                     <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 max-w-7xl">
-                        {location.pathname === '/agency/dashboard' && <AgencyQuickStats />}
                         <Outlet />
                     </div>
                 </main>
