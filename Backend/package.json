@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon --env-file=.env server.js"
+    "dev": "nodemon --env-file=.env server.js",
+    "seed:fresh": "node scripts/seedTestData.js --fresh",
+    "analyze": "node scripts/quickTest.js",
+    "test:ai": "node scripts/testRecommendations.js",
+    "seed": "node scripts/seedTestData.js"
   },
   "author": "",
   "license": "ISC",

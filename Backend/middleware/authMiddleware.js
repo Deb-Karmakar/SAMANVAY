@@ -1,5 +1,3 @@
-// Backend/middleware/authMiddleware.js (FIXED)
-
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 import asyncHandler from 'express-async-handler';
@@ -33,7 +31,6 @@ const protect = asyncHandler(async (req, res, next) => {
 });
 
 const isAdmin = (req, res, next) => {
-    // ✅ FIXED: Added parentheses for correct operator precedence
     if (req.user && (req.user.role === 'CentralAdmin' || req.user.role === 'Admin')) {
         next();
     } else {
@@ -57,4 +54,29 @@ const isExecutingAgency = (req, res, next) => {
     }
 };
 
-export { protect, isAdmin, isStateOfficer, isExecutingAgency };
+// ✅ Flexible role-based access control
+const restrictTo = (...roles) => {
+    return (req, res, next) => {
+        // Check if user is authenticated
+        if (!req.user) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Not authenticated. Please log in.' 
+            });
+        }
+
+        // Check if user's role is in the allowed roles
+        if (!roles.includes(req.user.role)) {
+            console.log(`❌ Access denied for ${req.user.email}. Required: ${roles.join(' or ')}, Got: ${req.user.role}`);
+            return res.status(403).json({ 
+                success: false,
+                message: `Access denied. Required role: ${roles.join(' or ')}` 
+            });
+        }
+
+        console.log(`✅ Access granted for ${req.user.email} with role ${req.user.role}`);
+        next();
+    };
+};
+
+export { protect, isAdmin, isStateOfficer, isExecutingAgency, restrictTo };

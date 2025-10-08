@@ -14,6 +14,7 @@ import utilizationRoutes from './routes/utilizationRoutes.js';
 import pfmsRoutes from './routes/pfmsRoutes.js'
 import reportRoutes from './routes/reportRoutes.js';
 import chatbotRoutes from './routes/chatbot.js';
+import agencyMatchingRoutes from './routes/agencyMatching.js';
 
 import { initializePFMSCronJobs } from './services/pfmsCronService.js';
 import { startAlertCron } from './services/cronService.js';
@@ -64,6 +65,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/pfms', pfmsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/agency-matching', agencyMatchingRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
