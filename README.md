@@ -61,6 +61,30 @@ The platform provides three distinct user roles with specialized dashboards and 
 - **Budget Reconciliation**: Project data integration with PFMS figures
 - **Predictive Analytics**: Risk assessment and utilization forecasting
 
+### 🤖 AI-Powered Features
+
+#### 🎯 Smart Agency Recommendation System
+- **Hybrid AI Engine**: Combines rule-based scoring with Groq LLaMA 3.1 8B model
+- **Multi-Factor Analysis**: 6 key metrics with weighted scoring (100-point scale)
+  - **Completion Rate** (25 points): Historical project success rate
+  - **Experience Match** (20 points): Similar project component expertise
+  - **Current Workload** (20 points): Capacity and availability assessment
+  - **Geographic Proximity** (20 points): District/state location matching
+  - **Budget Efficiency** (10 points): Financial utilization track record
+  - **New Agency Bonus** (5 points): Fair opportunity for emerging agencies
+- **AI Enhancement**: LLaMA model provides contextual analysis and confidence scoring
+- **State Officer Exclusive**: Available only to State Officers for project assignment
+- **Intelligent Filtering**: Minimum qualification threshold with transparent scoring
+
+#### 💬 AI Assistant Chatbot
+- **Role-Aware Intelligence**: Context-sensitive responses based on user role and permissions
+- **Real-Time Data Integration**: Fetches live project, agency, and performance data
+- **Conversational Memory**: Maintains chat history for contextual conversations
+- **Groq-Powered**: Uses LLaMA 3.1 8B Instant model for fast, accurate responses
+- **Smart Suggestions**: Role-specific question recommendations
+- **Multi-User Support**: Concurrent conversations with personalized context
+- **Government-Grade**: Professional tone with scheme-specific knowledge
+
 ## ⚙️ Automated Systems
 
 ### 🔔 Alert System Architecture
@@ -101,6 +125,47 @@ The SAMANVAY alert system uses a sophisticated multi-level escalation mechanism:
 - **Weekly Analysis**: Sunday 1:00 AM IST - Comprehensive analysis
 - **Monthly Reconciliation**: 1st of month 2:00 AM IST - Full reconciliation
 
+### 🤖 AI Recommendation Algorithm
+
+**Phase 1: Rule-Based Scoring Engine**
+```javascript
+// Scoring Algorithm (100-point scale)
+1. Completion Rate (25 points)
+   - Historical success rate of completed projects
+   - Formula: (Completed Projects / Total Projects) * 25
+
+2. Experience Match (20 points)  
+   - Count of similar component projects (Adarsh Gram/GIA/Hostel)
+   - Formula: min(Similar Projects * 4, 20)
+
+3. Current Workload (20 points)
+   - Penalty system for overloaded agencies
+   - 0 projects: 20 points, 1-2: 18 points, 3-4: 15 points, 5-6: 10 points, 7+: 5 points
+
+4. Geographic Proximity (20 points)
+   - Same district: 20 points, Different district: 10 points
+
+5. Budget Efficiency (10 points)
+   - Average utilization rate of allocated funds
+   - Formula: (Average Efficiency / 100) * 10
+
+6. New Agency Bonus (5 points)
+   - Encouragement for agencies with no project history
+```
+
+**Phase 2: AI Enhancement**
+```javascript
+// Groq LLaMA 3.1 8B Analysis
+- Contextual evaluation of rule-based scores
+- Confidence scoring (0-100%)
+- Strength/weakness analysis
+- Risk assessment
+- Final ranking with reasoning
+- Recommendation levels: "Highly Recommended", "Recommended", "Consider"
+```
+
+**Qualification Threshold:** Minimum 40/100 points to be considered by AI
+
 ## 🏗️ System Architecture
 
 ```
@@ -132,6 +197,7 @@ SAMANVAY/
 - **Framework**: Express.js 5.x
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT tokens with bcrypt hashing
+- **AI/ML Services**: Groq SDK with LLaMA 3.1 8B Instant model
 - **File Handling**: Multer for multipart uploads
 - **PDF Generation**: PDFKit for report generation
 - **Web Scraping**: Puppeteer for data extraction
@@ -204,6 +270,9 @@ EMAIL_PASS=your-app-password
 # PFMS Integration (if applicable)
 PFMS_API_URL=https://pfms.gov.in/api
 PFMS_API_KEY=your_pfms_api_key
+
+# AI Services Configuration
+GROQ_API_KEY=your_groq_api_key_for_llama
 
 # Server Configuration
 PORT=5000
@@ -310,6 +379,66 @@ Password: admin123
 - Direct communication with state officers
 
 **Onboarding:** Agencies register and are approved by respective state officers.
+
+## 🤖 AI Features Usage
+
+### Smart Agency Recommendation Workflow
+
+**For State Officers:**
+1. **Create New Project**: Fill project details (name, component, district, budget)
+2. **Request AI Recommendations**: System analyzes all active agencies in your state
+3. **Review AI Analysis**: Get ranked recommendations with confidence scores
+4. **View Detailed Reasoning**: Understand why each agency was recommended
+5. **Make Informed Decision**: Assign project based on AI insights
+
+**Example API Request:**
+```javascript
+POST /api/agency-matching/recommendations
+{
+  "name": "Rural Connectivity Project Phase 2",
+  "component": "Adarsh Gram", 
+  "district": "Pune",
+  "budget": 5000000,
+  "description": "Digital infrastructure development"
+}
+```
+
+**Example AI Response:**
+```javascript
+{
+  "success": true,
+  "aiRecommendations": [
+    {
+      "agencyName": "Maharashtra Rural Development Corp",
+      "rank": 1,
+      "confidenceScore": 87,
+      "recommendation": "Highly Recommended",
+      "reasoning": "Excellent track record with 15 Adarsh Gram projects completed...",
+      "strengths": ["High completion rate (95%)", "Local presence in Pune"],
+      "concerns": [],
+      "bestFor": "Complex rural development with proven expertise"
+    }
+  ],
+  "summary": "Strong candidates available with excellent local expertise."
+}
+```
+
+### AI Chatbot Usage Examples
+
+**Central Admin Queries:**
+- "What's the national project completion rate?"
+- "Show me states with budget utilization below 60%"
+- "How many agencies are pending approval?"
+
+**State Officer Queries:**
+- "List projects in my state that are behind schedule"
+- "Which agencies in my state have the highest completion rates?"
+- "How do I get AI recommendations for project assignment?"
+
+**Executing Agency Queries:**
+- "What are my upcoming project deadlines?"
+- "How do I upload proof of work for milestone completion?"
+- "Show my current budget utilization status"
 
 ## 🗄️ Database Schema
 
@@ -577,6 +706,18 @@ POST /api/upload/certificates       # Upload utilization certificates (PDF)
 ```
 GET  /api/communications            # Communication logs and messages
 POST /api/communications            # Send notifications/messages
+```
+
+### AI-Powered Services
+```
+# Agency Recommendation System (State Officers only)
+POST /api/agency-matching/recommendations  # Get AI-powered agency recommendations
+
+# AI Assistant Chatbot (All authenticated users)
+POST /api/chatbot/message              # Send message to AI assistant
+GET  /api/chatbot/suggestions          # Get role-specific suggested questions
+GET  /api/chatbot/history              # Retrieve chat conversation history
+DELETE /api/chatbot/history            # Clear chat history
 ```
 
 ## 📱 PWA Features
