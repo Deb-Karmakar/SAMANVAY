@@ -14,7 +14,8 @@ import {
     reviewMilestone,
     getProjectsWithPendingReviews,
     getProjectLocations,
-    getProjectLocationsForState
+    getProjectLocationsForState,
+    getProjectLocationsForAgency  // ← ADD THIS
 } from '../controllers/projectController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -155,5 +156,16 @@ router.put('/:projectId/checklist/:assignmentIndex/:checklistIndex/review',
 
 // Get single project by ID
 router.get('/:id', protect, getProjectById);
+
+// Get project locations for state officer's state
+router.get('/locations/mystate', protect, getProjectLocationsForState);
+
+// Get project locations for agency (ADD THIS) ↓
+router.get('/locations/myagency', protect, async (req, res, next) => {
+    if (req.user.role !== 'ExecutingAgency') {
+        return res.status(403).json({ message: 'Not authorized' });
+    }
+    next();
+}, getProjectLocationsForAgency);
 
 export default router;

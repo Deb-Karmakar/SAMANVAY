@@ -609,6 +609,54 @@ const getProjectLocationsForState = asyncHandler(async (req, res) => {
     res.json(projects);
 });
 
+// @desc   Get project locations for logged-in agency
+// @route  GET /api/projects/locations/myagency
+const getProjectLocationsForAgency = asyncHandler(async (req, res) => {
+    console.log('🗺️ GET AGENCY PROJECT LOCATIONS - User:', req.user.email);
+    
+    if (req.user.role !== 'ExecutingAgency') {
+        console.log('❌ Authorization failed - User is not an agency');
+        return res.status(403).json({ message: 'Only executing agencies can view their project locations' });
+    }
+
+    if (!req.user.agencyId) {
+        console.log('❌ Agency ID not found for user');
+        return res.status(400).json({ message: 'Agency ID not found' });
+    }
+
+    console.log('✅ Fetching locations for agencyId:', req.user.agencyId);
+    
+    // Find projects assigned to this agency with valid locations
+    const projects = await Project.find({ 
+        'assignments.agency': req.user.agencyId,
+        'location.coordinates': { $exists: true, $ne: [] } 
+    }).select('name status component location budget progress state district assignments')
+      .populate('assignments.agency', 'name');
+
+    // Filter to show only this agency's assignment data
+    const filteredProjects = projects.map(project => {
+        const relevantAssignment = project.assignments.find(
+            assignment => assignment.agency._id.toString() === req.user.agencyId.toString()
+        );
+        
+        return {
+            _id: project._id,
+            name: project.name,
+            status: project.status,
+            component: project.component,
+            location: project.location,
+            budget: project.budget,
+            progress: project.progress,
+            state: project.state,
+            district: project.district,
+            assignment: relevantAssignment
+        };
+    });
+
+    console.log(`✅ Found ${filteredProjects.length} projects with locations for agency`);
+    res.json(filteredProjects);
+});
+
 // Export ALL functions
 export { 
     createProject, 
@@ -622,5 +670,6 @@ export {
     reviewMilestone,
     getProjectsWithPendingReviews,
     getProjectLocations,
-    getProjectLocationsForState
+    getProjectLocationsForState,
+    getProjectLocationsForAgency  // ← ADD THIS
 };
