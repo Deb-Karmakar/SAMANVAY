@@ -67,7 +67,7 @@ const stateGeoConfig = {
     mobileZoom: 5
   },
   'Arunachal Pradesh': {
-    file: '/IndiaStateTopojsonFiles/ArunachalPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/Arunachal.geojson',
     center: [28.2180, 94.7278],
     zoom: 6,
     mobileZoom: 5
@@ -97,7 +97,7 @@ const stateGeoConfig = {
     mobileZoom: 5
   },
   'Dadra and Nagar Haveli and Daman and Diu': {
-    file: '/IndiaStateTopojsonFiles/DadraAndNagarHaveliAndDamanAndDiu.geojson',
+    file: '/IndiaStateTopojsonFiles/Dadra.geojson',
     center: [20.1809, 73.0169],
     zoom: 8,
     mobileZoom: 7
@@ -115,7 +115,7 @@ const stateGeoConfig = {
     mobileZoom: 7
   },
   'Gujarat': {
-    file: '/IndiaStateTopojsonFiles/Gujarat.geojson',
+    file: '/IndiaStateTopojsonFiles/Gujrat.geojson',
     center: [22.2587, 71.1924],
     zoom: 6,
     mobileZoom: 5
@@ -127,7 +127,7 @@ const stateGeoConfig = {
     mobileZoom: 6
   },
   'Himachal Pradesh': {
-    file: '/IndiaStateTopojsonFiles/HimachalPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/Himanchal.geojson',
     center: [31.1048, 77.1734],
     zoom: 7,
     mobileZoom: 6
@@ -157,7 +157,7 @@ const stateGeoConfig = {
     mobileZoom: 6
   },
   'Ladakh': {
-    file: '/IndiaStateTopojsonFiles/Ladakh.geojson',
+    file: '/IndiaStateTopojsonFiles/JammuAndKashmir.geojson', // Ladakh file not found, using J&K
     center: [34.1526, 77.5770],
     zoom: 6,
     mobileZoom: 5
@@ -205,7 +205,7 @@ const stateGeoConfig = {
     mobileZoom: 6
   },
   'Odisha': {
-    file: '/IndiaStateTopojsonFiles/Odisha.geojson',
+    file: '/IndiaStateTopojsonFiles/Orissa.geojson',
     center: [20.9517, 85.0985],
     zoom: 6,
     mobileZoom: 5
