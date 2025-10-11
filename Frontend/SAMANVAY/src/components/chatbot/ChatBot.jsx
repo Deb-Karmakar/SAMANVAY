@@ -59,7 +59,6 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              // Headings
               h1: ({ node, ...props }) => (
                 <h1 className="text-lg font-bold mb-2 text-blue-700 mt-3 first:mt-0" {...props} />
               ),
@@ -69,23 +68,15 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
               h3: ({ node, ...props }) => (
                 <h3 className="text-sm font-semibold mb-1.5 text-gray-800 mt-2 first:mt-0" {...props} />
               ),
-              
-              // Paragraphs
               p: ({ node, ...props }) => (
                 <p className="mb-2 leading-relaxed text-gray-800 last:mb-0" {...props} />
               ),
-              
-              // Strong/Bold
               strong: ({ node, ...props }) => (
                 <strong className="font-bold text-gray-900" {...props} />
               ),
-              
-              // Emphasis/Italic
               em: ({ node, ...props }) => (
                 <em className="italic text-gray-700" {...props} />
               ),
-              
-              // Lists
               ul: ({ node, ...props }) => (
                 <ul className="list-disc ml-5 mb-2 space-y-1" {...props} />
               ),
@@ -95,8 +86,6 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
               li: ({ node, ...props }) => (
                 <li className="text-gray-800 leading-relaxed" {...props} />
               ),
-              
-              // Code
               code: ({ node, inline, className, children, ...props }) => {
                 return inline ? (
                   <code
@@ -117,21 +106,15 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
                   </code>
                 );
               },
-              
-              // Pre (code blocks)
               pre: ({ node, ...props }) => (
                 <pre className="my-2 overflow-hidden rounded-lg" {...props} />
               ),
-              
-              // Blockquotes
               blockquote: ({ node, ...props }) => (
                 <blockquote
                   className="border-l-4 border-blue-500 pl-3 py-1 italic text-gray-600 my-2 bg-blue-50 rounded-r"
                   {...props}
                 />
               ),
-              
-              // Links
               a: ({ node, ...props }) => (
                 <a
                   className="text-blue-600 hover:underline font-medium"
@@ -140,8 +123,6 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
                   {...props}
                 />
               ),
-              
-              // Tables
               table: ({ node, ...props }) => (
                 <div className="overflow-x-auto my-2">
                   <table className="min-w-full border-collapse border border-gray-300 text-xs" {...props} />
@@ -153,13 +134,9 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
               td: ({ node, ...props }) => (
                 <td className="border border-gray-300 px-3 py-1.5" {...props} />
               ),
-              
-              // Horizontal Rule
               hr: ({ node, ...props }) => (
                 <hr className="my-3 border-gray-300" {...props} />
               ),
-              
-              // Images (if any)
               img: ({ node, ...props }) => (
                 <img className="max-w-full h-auto rounded-lg my-2" {...props} />
               ),
@@ -183,8 +160,8 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
   );
 }
 
-export default function ChatBot() {
-  // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+// Main ChatBot Component
+function ChatBot() {
   const { userInfo } = useAuth();
   
   const [isOpen, setIsOpen] = useState(false);
@@ -213,7 +190,7 @@ How can I assist you today?`,
   const { data: suggestions = [] } = useQuery({
     queryKey: ['chatSuggestions'],
     queryFn: getSuggestions,
-    enabled: isOpen && !!userInfo, // Only fetch if user is authenticated
+    enabled: isOpen && !!userInfo,
   });
 
   // Send message mutation
@@ -259,29 +236,20 @@ How can I help you today?`,
     },
   });
 
-  // Scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // ✅ ALL useEffect hooks together
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input when opened
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && inputRef.current) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
   }, [isOpen, isMinimized]);
 
-  // ✅ NOW we can do the early return AFTER all hooks are called
-  if (!userInfo) {
-    return null;
-  }
-
+  // ✅ Handler functions defined unconditionally
   const handleSendMessage = async (messageText = inputMessage) => {
     if (!messageText.trim() || sendMessageMutation.isPending) return;
 
@@ -314,7 +282,12 @@ How can I help you today?`,
     }
   };
 
-  // Floating Button - Always visible when not open
+  // ✅ Early return for unauthenticated users (after all hooks)
+  if (!userInfo) {
+    return null;
+  }
+
+  // Floating Button
   if (!isOpen) {
     return (
       <div
@@ -339,7 +312,6 @@ How can I help you today?`,
             border: '2px solid rgba(255, 255, 255, 0.3)',
           }}
         >
-          {/* White circle background for icon */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="h-10 w-10 rounded-full bg-white/95 flex items-center justify-center shadow-inner">
               <MessageCircle
@@ -348,8 +320,6 @@ How can I help you today?`,
               />
             </div>
           </div>
-
-          {/* Pulse animation */}
           <span
             className="absolute inset-0 rounded-full bg-white/20 animate-ping"
             style={{ animationDuration: '2s' }}
@@ -382,7 +352,6 @@ How can I help you today?`,
             height: 'auto',
           }}
         >
-          {/* Header - Clean and Professional */}
           <CardHeader className="flex-shrink-0 border-b p-4 bg-gradient-to-r from-blue-600 to-blue-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -420,7 +389,6 @@ How can I help you today?`,
             </div>
           </CardHeader>
 
-          {/* Messages */}
           <CardContent className="flex-1 p-4 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
             <ScrollArea className="h-full">
               <div className="space-y-4 pr-3">
@@ -455,7 +423,6 @@ How can I help you today?`,
             </ScrollArea>
           </CardContent>
 
-          {/* Suggestions */}
           {messages.length <= 1 && suggestions.length > 0 && (
             <div className="flex-shrink-0 px-4 pb-3 bg-white border-t">
               <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
@@ -476,7 +443,6 @@ How can I help you today?`,
             </div>
           )}
 
-          {/* Input */}
           <div className="flex-shrink-0 border-t p-4 bg-white">
             <div className="flex gap-2">
               <Input
@@ -521,7 +487,6 @@ How can I help you today?`,
             isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
           )}
         >
-          {/* Header */}
           <CardHeader
             className={cn(
               'flex-shrink-0 border-b p-4 bg-gradient-to-r from-blue-600 to-blue-700',
@@ -590,7 +555,6 @@ How can I help you today?`,
 
           {!isMinimized && (
             <>
-              {/* Messages */}
               <CardContent className="flex-1 p-4 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
                 <ScrollArea className="h-full">
                   <div className="space-y-4 pr-4">
@@ -625,7 +589,6 @@ How can I help you today?`,
                 </ScrollArea>
               </CardContent>
 
-              {/* Suggestions */}
               {messages.length <= 1 && suggestions.length > 0 && (
                 <div className="flex-shrink-0 px-4 pb-3 bg-white border-t">
                   <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
@@ -646,7 +609,6 @@ How can I help you today?`,
                 </div>
               )}
 
-              {/* Input */}
               <div className="flex-shrink-0 border-t p-4 bg-white">
                 <div className="flex gap-2">
                   <Input
@@ -681,3 +643,5 @@ How can I help you today?`,
     </>
   );
 }
+
+export default ChatBot;
