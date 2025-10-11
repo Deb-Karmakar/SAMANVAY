@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   MessageCircle,
   X,
@@ -35,6 +37,152 @@ const clearChatHistory = async () => {
   return data;
 };
 
+// Markdown Message Component
+function MarkdownMessage({ content, role, timestamp, isError }) {
+  return (
+    <div
+      className={cn(
+        'max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm',
+        role === 'user'
+          ? 'bg-blue-600 text-white'
+          : isError
+          ? 'bg-red-50 text-red-900 border border-red-200'
+          : 'bg-white text-gray-900 border border-gray-200'
+      )}
+    >
+      {role === 'user' ? (
+        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+          {content}
+        </p>
+      ) : (
+        <div className="markdown-content text-sm">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Headings
+              h1: ({ node, ...props }) => (
+                <h1 className="text-lg font-bold mb-2 text-blue-700 mt-3 first:mt-0" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-base font-semibold mb-2 text-blue-600 mt-3 first:mt-0" {...props} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 className="text-sm font-semibold mb-1.5 text-gray-800 mt-2 first:mt-0" {...props} />
+              ),
+              
+              // Paragraphs
+              p: ({ node, ...props }) => (
+                <p className="mb-2 leading-relaxed text-gray-800 last:mb-0" {...props} />
+              ),
+              
+              // Strong/Bold
+              strong: ({ node, ...props }) => (
+                <strong className="font-bold text-gray-900" {...props} />
+              ),
+              
+              // Emphasis/Italic
+              em: ({ node, ...props }) => (
+                <em className="italic text-gray-700" {...props} />
+              ),
+              
+              // Lists
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc ml-5 mb-2 space-y-1" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal ml-5 mb-2 space-y-1" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="text-gray-800 leading-relaxed" {...props} />
+              ),
+              
+              // Code
+              code: ({ node, inline, className, children, ...props }) => {
+                return inline ? (
+                  <code
+                    className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-red-600 border border-gray-200"
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                ) : (
+                  <code
+                    className={cn(
+                      'block bg-gray-900 text-gray-100 p-3 rounded-lg my-2 overflow-x-auto text-xs font-mono',
+                      className
+                    )}
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                );
+              },
+              
+              // Pre (code blocks)
+              pre: ({ node, ...props }) => (
+                <pre className="my-2 overflow-hidden rounded-lg" {...props} />
+              ),
+              
+              // Blockquotes
+              blockquote: ({ node, ...props }) => (
+                <blockquote
+                  className="border-l-4 border-blue-500 pl-3 py-1 italic text-gray-600 my-2 bg-blue-50 rounded-r"
+                  {...props}
+                />
+              ),
+              
+              // Links
+              a: ({ node, ...props }) => (
+                <a
+                  className="text-blue-600 hover:underline font-medium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...props}
+                />
+              ),
+              
+              // Tables
+              table: ({ node, ...props }) => (
+                <div className="overflow-x-auto my-2">
+                  <table className="min-w-full border-collapse border border-gray-300 text-xs" {...props} />
+                </div>
+              ),
+              th: ({ node, ...props }) => (
+                <th className="border border-gray-300 bg-gray-100 px-3 py-1.5 font-semibold text-left" {...props} />
+              ),
+              td: ({ node, ...props }) => (
+                <td className="border border-gray-300 px-3 py-1.5" {...props} />
+              ),
+              
+              // Horizontal Rule
+              hr: ({ node, ...props }) => (
+                <hr className="my-3 border-gray-300" {...props} />
+              ),
+              
+              // Images (if any)
+              img: ({ node, ...props }) => (
+                <img className="max-w-full h-auto rounded-lg my-2" {...props} />
+              ),
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      )}
+      <p
+        className={cn(
+          'text-xs mt-1.5',
+          role === 'user' ? 'text-blue-100' : 'text-gray-400'
+        )}
+      >
+        {formatDistanceToNow(new Date(timestamp), {
+          addSuffix: true,
+        })}
+      </p>
+    </div>
+  );
+}
+
 export default function ChatBot() {
   const { userInfo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -42,7 +190,16 @@ export default function ChatBot() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m SAMANVAY AI Assistant. How can I help you today?',
+      content: `Hello! 👋 I'm **SAMANVAY AI Assistant**.
+
+I can help you with:
+- Project management and tracking
+- Agency assignments and recommendations
+- Fund utilization and PFMS data
+- Alert management and workflows
+- Platform navigation and features
+
+How can I assist you today?`,
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -81,7 +238,7 @@ export default function ChatBot() {
         ...prev,
         {
           role: 'assistant',
-          content: 'Sorry, I encountered an error. Please try again.',
+          content: '**Error**: Sorry, I encountered an error processing your request. Please try again or contact support if the issue persists.',
           timestamp: new Date().toISOString(),
           isError: true,
         },
@@ -96,7 +253,9 @@ export default function ChatBot() {
       setMessages([
         {
           role: 'assistant',
-          content: 'Chat history cleared. How can I help you?',
+          content: `**Chat history cleared successfully.**
+
+How can I help you today?`,
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -169,7 +328,8 @@ export default function ChatBot() {
           className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 relative overflow-hidden group"
           size="icon"
           style={{
-            background: 'linear-gradient(to bottom, #FF9933 0%, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%, #138808 100%)',
+            background:
+              'linear-gradient(to bottom, #FF9933 0%, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%, #138808 100%)',
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
@@ -180,12 +340,18 @@ export default function ChatBot() {
           {/* White circle background for icon */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="h-10 w-10 rounded-full bg-white/95 flex items-center justify-center shadow-inner">
-              <MessageCircle className="h-5 w-5 text-blue-600" strokeWidth={2.5} />
+              <MessageCircle
+                className="h-5 w-5 text-blue-600"
+                strokeWidth={2.5}
+              />
             </div>
           </div>
-          
+
           {/* Pulse animation */}
-          <span className="absolute inset-0 rounded-full bg-white/20 animate-ping" style={{ animationDuration: '2s' }} />
+          <span
+            className="absolute inset-0 rounded-full bg-white/20 animate-ping"
+            style={{ animationDuration: '2s' }}
+          />
         </Button>
       </div>
     );
@@ -194,7 +360,7 @@ export default function ChatBot() {
   return (
     <>
       {/* Mobile: Full Screen Overlay */}
-      <div 
+      <div
         className="md:hidden"
         style={{
           position: 'fixed',
@@ -203,7 +369,7 @@ export default function ChatBot() {
           zIndex: 9999,
         }}
       >
-        <Card 
+        <Card
           className="flex flex-col bg-white"
           style={{
             position: 'absolute',
@@ -215,33 +381,35 @@ export default function ChatBot() {
           }}
         >
           {/* Header - Clean and Professional */}
-          <CardHeader className="flex-shrink-0 border-b p-4 bg-white">
+          <CardHeader className="flex-shrink-0 border-b p-4 bg-gradient-to-r from-blue-600 to-blue-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-5 w-5 text-white" />
+                <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <CardTitle className="text-sm font-semibold text-gray-900 truncate">
+                  <CardTitle className="text-sm font-semibold text-white truncate">
                     SAMANVAY AI Assistant
                   </CardTitle>
-                  <p className="text-xs text-gray-500 truncate">Online</p>
+                  <p className="text-xs text-blue-100 truncate">
+                    Online • Powered by Groq AI
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                  className="h-8 w-8 text-white hover:text-white hover:bg-blue-500"
                   onClick={handleClearHistory}
                   disabled={clearHistoryMutation.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                  className="h-8 w-8 text-white hover:text-white hover:bg-blue-500"
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="h-4 w-4" />
@@ -251,7 +419,7 @@ export default function ChatBot() {
           </CardHeader>
 
           {/* Messages */}
-          <CardContent className="flex-1 p-4 overflow-hidden bg-gray-50">
+          <CardContent className="flex-1 p-4 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
             <ScrollArea className="h-full">
               <div className="space-y-4 pr-3">
                 {messages.map((msg, idx) => (
@@ -262,38 +430,21 @@ export default function ChatBot() {
                       msg.role === 'user' ? 'justify-end' : 'justify-start'
                     )}
                   >
-                    <div
-                      className={cn(
-                        'max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm',
-                        msg.role === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : msg.isError
-                          ? 'bg-red-50 text-red-900 border border-red-200'
-                          : 'bg-white text-gray-900 border border-gray-200'
-                      )}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                        {msg.content}
-                      </p>
-                      <p
-                        className={cn(
-                          'text-xs mt-1.5',
-                          msg.role === 'user'
-                            ? 'text-blue-100'
-                            : 'text-gray-400'
-                        )}
-                      >
-                        {formatDistanceToNow(new Date(msg.timestamp), {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
+                    <MarkdownMessage
+                      content={msg.content}
+                      role={msg.role}
+                      timestamp={msg.timestamp}
+                      isError={msg.isError}
+                    />
                   </div>
                 ))}
                 {sendMessageMutation.isPending && (
                   <div className="flex justify-start">
-                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        <span className="text-sm text-gray-500">AI is thinking...</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -304,16 +455,16 @@ export default function ChatBot() {
 
           {/* Suggestions */}
           {messages.length <= 1 && suggestions.length > 0 && (
-            <div className="flex-shrink-0 px-4 pb-3 bg-gray-50">
-              <p className="text-xs font-medium text-gray-500 mb-2">
-                Suggested questions:
+            <div className="flex-shrink-0 px-4 pb-3 bg-white border-t">
+              <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                <span>💡</span> Suggested questions:
               </p>
               <div className="flex flex-wrap gap-2">
                 {suggestions.slice(0, 3).map((suggestion, idx) => (
                   <Badge
                     key={idx}
                     variant="outline"
-                    className="cursor-pointer hover:bg-gray-100 text-xs font-normal text-gray-700 border-gray-300"
+                    className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 text-xs font-normal text-gray-700 border-gray-300 transition-colors"
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     {suggestion}
@@ -331,7 +482,7 @@ export default function ChatBot() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Ask me anything about SAMANVAY..."
                 disabled={sendMessageMutation.isPending}
                 className="flex-1 text-sm border-gray-300 focus-visible:ring-blue-500"
               />
@@ -364,28 +515,30 @@ export default function ChatBot() {
       >
         <Card
           className={cn(
-            'flex flex-col shadow-2xl transition-all bg-white',
+            'flex flex-col shadow-2xl transition-all bg-white border-2 border-gray-200',
             isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
           )}
         >
           {/* Header */}
-          <CardHeader 
+          <CardHeader
             className={cn(
-              "flex-shrink-0 border-b p-4 bg-white",
-              isMinimized && "cursor-pointer"
+              'flex-shrink-0 border-b p-4 bg-gradient-to-r from-blue-600 to-blue-700',
+              isMinimized && 'cursor-pointer'
             )}
             onClick={() => isMinimized && setIsMinimized(false)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-5 w-5 text-white" />
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <CardTitle className="text-base font-semibold text-gray-900 truncate">
+                  <CardTitle className="text-base font-semibold text-white truncate">
                     SAMANVAY AI Assistant
                   </CardTitle>
-                  <p className="text-xs text-gray-500 truncate">Online</p>
+                  <p className="text-xs text-blue-100 truncate">
+                    Online • Powered by Groq AI
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -393,7 +546,7 @@ export default function ChatBot() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-white hover:text-white hover:bg-blue-500"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleClearHistory();
@@ -406,7 +559,7 @@ export default function ChatBot() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-white hover:text-white hover:bg-blue-500"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMinimized(!isMinimized);
@@ -421,7 +574,7 @@ export default function ChatBot() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-white hover:text-white hover:bg-blue-500"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsOpen(false);
@@ -436,7 +589,7 @@ export default function ChatBot() {
           {!isMinimized && (
             <>
               {/* Messages */}
-              <CardContent className="flex-1 p-4 overflow-hidden bg-gray-50">
+              <CardContent className="flex-1 p-4 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
                 <ScrollArea className="h-full">
                   <div className="space-y-4 pr-4">
                     {messages.map((msg, idx) => (
@@ -447,38 +600,21 @@ export default function ChatBot() {
                           msg.role === 'user' ? 'justify-end' : 'justify-start'
                         )}
                       >
-                        <div
-                          className={cn(
-                            'max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm',
-                            msg.role === 'user'
-                              ? 'bg-blue-600 text-white'
-                              : msg.isError
-                              ? 'bg-red-50 text-red-900 border border-red-200'
-                              : 'bg-white text-gray-900 border border-gray-200'
-                          )}
-                        >
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                            {msg.content}
-                          </p>
-                          <p
-                            className={cn(
-                              'text-xs mt-1.5',
-                              msg.role === 'user'
-                                ? 'text-blue-100'
-                                : 'text-gray-400'
-                            )}
-                          >
-                            {formatDistanceToNow(new Date(msg.timestamp), {
-                              addSuffix: true,
-                            })}
-                          </p>
-                        </div>
+                        <MarkdownMessage
+                          content={msg.content}
+                          role={msg.role}
+                          timestamp={msg.timestamp}
+                          isError={msg.isError}
+                        />
                       </div>
                     ))}
                     {sendMessageMutation.isPending && (
                       <div className="flex justify-start">
                         <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
-                          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                            <span className="text-sm text-gray-500">AI is thinking...</span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -489,16 +625,16 @@ export default function ChatBot() {
 
               {/* Suggestions */}
               {messages.length <= 1 && suggestions.length > 0 && (
-                <div className="flex-shrink-0 px-4 pb-3 bg-gray-50">
-                  <p className="text-xs font-medium text-gray-500 mb-2">
-                    Suggested questions:
+                <div className="flex-shrink-0 px-4 pb-3 bg-white border-t">
+                  <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                    <span>💡</span> Suggested questions:
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {suggestions.slice(0, 4).map((suggestion, idx) => (
                       <Badge
                         key={idx}
                         variant="outline"
-                        className="cursor-pointer hover:bg-gray-100 text-xs font-normal text-gray-700 border-gray-300"
+                        className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 text-xs font-normal text-gray-700 border-gray-300 transition-colors"
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
                         {suggestion}
@@ -516,13 +652,15 @@ export default function ChatBot() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
+                    placeholder="Ask me anything about SAMANVAY..."
                     disabled={sendMessageMutation.isPending}
                     className="flex-1 border-gray-300 focus-visible:ring-blue-500"
                   />
                   <Button
                     onClick={() => handleSendMessage()}
-                    disabled={!inputMessage.trim() || sendMessageMutation.isPending}
+                    disabled={
+                      !inputMessage.trim() || sendMessageMutation.isPending
+                    }
                     size="icon"
                     className="bg-blue-600 hover:bg-blue-700"
                   >

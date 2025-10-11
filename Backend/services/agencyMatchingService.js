@@ -2,11 +2,24 @@ import Groq from 'groq-sdk';
 import Agency from '../models/agencyModel.js';
 import Project from '../models/projectModel.js';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
 class AgencyMatchingService {
+  constructor() {
+    this.groqClient = null; // ✅ Will be initialized on first use
+  }
+
+  // ✅ Initialize Groq client only when needed
+  getGroqClient() {
+    if (!this.groqClient) {
+      if (!process.env.GROQ_API_KEY) {
+        throw new Error('GROQ_API_KEY is not configured');
+      }
+      this.groqClient = new Groq({
+        apiKey: process.env.GROQ_API_KEY,
+      });
+    }
+    return this.groqClient;
+  }
+
   // Phase 1: Rule-Based Scoring (UPDATED)
   async scoreAgencies(projectData, agencies) {
     const scores = [];
@@ -200,6 +213,9 @@ Respond in this JSON format:
 }
 
 Be professional, objective, and focus on the project's success. Don't penalize new agencies too harshly - everyone starts somewhere.`;
+
+      // ✅ Use lazy-initialized client
+      const groq = this.getGroqClient();
 
       const completion = await groq.chat.completions.create({
         messages: [

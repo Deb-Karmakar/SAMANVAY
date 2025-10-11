@@ -1,61 +1,91 @@
 // Backend/utils/emailService.js
-// Backend/utils/emailService.js
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    },
-    debug: true, // Add this
-    logger: true  // Add this
-});
-
-// Test the connection on startup
-transporter.verify(function(error, success) {
-    if (error) {
-        console.error('❌ Email transporter verification failed:', error);
-    } else {
-        console.log('✅ Email server is ready to send messages');
+class EmailService {
+    constructor() {
+        this.transporter = null;
     }
-});
 
-export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
-    try {
-        console.log('📧 Attempting to send email to:', to);
-        console.log('📧 Email config:', {
-            host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT,
-            user: process.env.EMAIL_USER,
-            hasPassword: !!process.env.EMAIL_PASSWORD
-        });
+    // ✅ Lazy initialization of transporter
+    getTransporter() {
+        if (!this.transporter) {
+            // Check if email credentials are configured
+            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+                console.warn('⚠️ Email credentials not configured. Email functionality will be disabled.');
+                return null;
+            }
 
-        const info = await transporter.sendMail({
-            from: `"SAMANVAY - PM-AJAY" <${process.env.EMAIL_USER}>`,
-            to,
-            subject,
-            html,
-            attachments
-        });
-        
-        console.log('✅ Email sent successfully:', info.messageId);
-        console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
-        return info;
-    } catch (error) {
-        console.error('❌ Email sending failed:', error);
-        console.error('❌ Error details:', {
-            message: error.message,
-            code: error.code,
-            command: error.command
-        });
-        throw error;
+            this.transporter = nodemailer.createTransport({
+                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+                port: process.env.EMAIL_PORT || 587,
+                secure: false,
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASSWORD
+                },
+                debug: true,
+                logger: true
+            });
+
+            // Verify connection on first initialization
+            this.transporter.verify(function(error, success) {
+                if (error) {
+                    console.error('❌ Email transporter verification failed:', error);
+                } else {
+                    console.log('✅ Email server is ready to send messages');
+                }
+            });
+        }
+
+        return this.transporter;
     }
-};
 
-// Rest of your emailTemplates code...
+    async sendEmail({ to, subject, html, attachments = [] }) {
+        try {
+            const transporter = this.getTransporter();
+            
+            if (!transporter) {
+                console.warn('⚠️ Email not sent - transporter not configured');
+                return { success: false, message: 'Email service not configured' };
+            }
+
+            console.log('📧 Attempting to send email to:', to);
+            console.log('📧 Email config:', {
+                host: process.env.EMAIL_HOST,
+                port: process.env.EMAIL_PORT,
+                user: process.env.EMAIL_USER,
+                hasPassword: !!process.env.EMAIL_PASSWORD
+            });
+
+            const info = await transporter.sendMail({
+                from: `"SAMANVAY - PM-AJAY" <${process.env.EMAIL_USER}>`,
+                to,
+                subject,
+                html,
+                attachments
+            });
+            
+            console.log('✅ Email sent successfully:', info.messageId);
+            console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
+            return info;
+        } catch (error) {
+            console.error('❌ Email sending failed:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                code: error.code,
+                command: error.command
+            });
+            throw error;
+        }
+    }
+}
+
+// Create singleton instance
+const emailService = new EmailService();
+
+// Export the sendEmail method
+export const sendEmail = emailService.sendEmail.bind(emailService);
+
 // Email templates
 const emailTemplates = {
     projectCreated: (projectName, stateName, projectId) => ({
@@ -201,6 +231,7 @@ const emailTemplates = {
             </div>
         `
     }),
+
     utilizationReportSubmitted: (stateOfficerName, agencyName, projectName, amount, reportId) => ({
         subject: `[ACTION REQUIRED] Utilization Report Submitted by ${agencyName}`,
         html: `
@@ -228,7 +259,8 @@ const emailTemplates = {
             </div>
         `
     }),
-     utilizationReportReviewed: (agencyName, projectName, amount, status, reviewComments) => ({
+
+    utilizationReportReviewed: (agencyName, projectName, amount, status, reviewComments) => ({
         subject: `Update: Your Utilization Report for ${projectName} has been ${status}`,
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
@@ -262,6 +294,5 @@ const emailTemplates = {
         `
     })
 };
-
 
 export { emailTemplates };
