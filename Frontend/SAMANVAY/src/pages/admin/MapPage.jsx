@@ -15,7 +15,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap } from 'react-leaflet';
 import { Map as MapIcon, Loader2, AlertTriangle, Filter, Layers, Info } from "lucide-react";
 import L from 'leaflet';
-import statesData from '@/assets/india-states.json';
+// If the file is in public folder, use relative path from public
+const statesData = await fetch('/india-states.json').then(res => res.json());
+
+// Or in an async function
+async function loadStatesData() {
+  try {
+    const response = await fetch('/india-states.json');
+    const statesData = await response.json();
+    return statesData;
+  } catch (error) {
+    console.error('Error loading states data:', error);
+    return [];
+  }
+}
 
 // --- FINAL CORRECTED IMPORTS ---
 import MarkerClusterGroup from 'react-leaflet-cluster';
