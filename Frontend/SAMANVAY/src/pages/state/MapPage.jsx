@@ -575,29 +575,46 @@ export default function StateMapPage() {
   });
 
   // Load GeoJSON data
-  useEffect(() => {
-    if (!stateName) return;
+  // Load GeoJSON data
+useEffect(() => {
+  if (!stateName) return;
 
-    const config = stateGeoConfig[stateName];
-    if (!config) {
-      setGeoError(`Map boundary file not configured for "${stateName}"`);
-      return;
+  const config = stateGeoConfig[stateName];
+  if (!config) {
+    setGeoError(`Map boundary file not configured for "${stateName}"`);
+    return;
+  }
+
+  const loadGeoJSON = async () => {
+    try {
+      console.log('Attempting to load GeoJSON from:', config.file);
+      const response = await fetch(config.file);
+      
+      console.log('Response status:', response.status);
+      console.log('Response content-type:', response.headers.get('content-type'));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: File not found at ${config.file}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      // Accept both application/json and application/geo+json
+      if (contentType && !contentType.includes('json')) {
+        throw new Error(`Invalid file type: Expected JSON but got ${contentType}. File may be corrupted.`);
+      }
+      
+      const data = await response.json();
+      console.log('GeoJSON loaded successfully!');
+      setGeoData(data);
+      setGeoError(null);
+    } catch (err) {
+      console.error('Failed to load GeoJSON:', err);
+      setGeoError(`Failed to load map: ${err.message}`);
     }
+  };
 
-    fetch(config.file)
-      .then(res => {
-        if (!res.ok) throw new Error(`File not found at ${config.file}`);
-        return res.json();
-      })
-      .then(data => {
-        setGeoData(data);
-        setGeoError(null);
-      })
-      .catch(err => {
-        console.error('Failed to load GeoJSON:', err);
-        setGeoError(err.message);
-      });
-  }, [stateName]);
+  loadGeoJSON();
+}, [stateName]);
 
   // Computed values
   const districts = useMemo(() => {
