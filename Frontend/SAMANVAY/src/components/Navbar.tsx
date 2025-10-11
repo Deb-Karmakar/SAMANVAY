@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom"; // 1. Import the useNavigate hook
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const navigate = useNavigate(); // 2. Initialize the hook
+  const navigate = useNavigate();
+
+  // Function to handle contact email redirect
+  const handleContactUs = () => {
+    window.location.href = "mailto:debkarma97@gmail.com";
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
@@ -19,13 +24,18 @@ export default function Navbar() {
 
           {/* Right side - Buttons */}
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" data-testid="button-contact">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              data-testid="button-contact"
+              onClick={handleContactUs}
+            >
               Contact Us
             </Button>
             <Button
               size="sm"
               data-testid="button-get-started"
-              onClick={() => navigate('/login')} // 3. Add onClick to navigate
+              onClick={() => navigate('/login')}
             >
               Get Started
             </Button>
@@ -35,4 +45,3 @@ export default function Navbar() {
     </nav>
   );
 }
-

@@ -6,7 +6,7 @@
 ![React](https://img.shields.io/badge/React-19.x-blue?style=flat-square&logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-6.x-green?style=flat-square&logo=mongodb)
 
-**SAMANVAY** is a comprehensive digital platform specifically designed for the **PM-AJAY (Prime Minister's Atal Jyoti Abhiyan Yojana)** scheme management. The system streamlines coordination between government agencies and implementing bodies for effective project management, real-time monitoring, financial tracking through PFMS integration, and intelligent alert systems with automated escalation workflows.
+**SAMANVAY** is a comprehensive digital platform specifically designed for the **PM-AJAY (Prime Minister's Atal Jyoti Abhiyan Yojana)** scheme management. The system streamlines coordination between government agencies and implementing bodies for effective project management, real-time monitoring, financial tracking through PFMS integration, blockchain-based transparency using Hyperledger Fabric, and intelligent alert systems with automated escalation workflows.
 
 ## 🏛️ Project Overview
 
@@ -29,6 +29,7 @@ The platform provides three distinct user roles with specialized dashboards and 
 - **Agency Management**: Registration, onboarding, and assignment workflows
 - **Milestone Tracking**: Checklist-based project monitoring with proof of work uploads
 - **Financial Integration**: Real-time PFMS data synchronization and utilization reporting
+- **Blockchain Transparency**: Hyperledger Fabric network for immutable audit trails and smart contracts
 - **Geographic Visualization**: Interactive maps with project locations using Leaflet
 - **Document Management**: PDF generation for project approvals and assignment orders
 - **Communication System**: Email notifications and in-app messaging
@@ -51,6 +52,17 @@ The platform provides three distinct user roles with specialized dashboards and 
 - **Timeline Alerts**: Behind schedule detection, milestone overdue warnings
 - **Auto-Resolution**: Alerts automatically resolve when conditions improve
 - **Escalation Analytics**: Statistics and tracking for unresolved issues
+
+### ⛓️ Blockchain Infrastructure & Smart Contracts
+- **Hyperledger Fabric Network**: Multi-organization blockchain with government entities as peers
+- **Immutable Audit Trails**: All project activities, fund transfers, and approvals recorded on blockchain
+- **Smart Contract Automation**: Automated milestone payments and approval workflows
+- **Digital Asset Management**: Tokenized representation of project assets and certificates
+- **Transparent Fund Tracking**: Complete visibility of fund flow from allocation to utilization
+- **Consensus-Based Approvals**: Multi-signature validation for critical project decisions
+- **Chaincode Integration**: Custom business logic for PM-AJAY scheme compliance
+- **Permissioned Access**: Role-based blockchain access with encrypted data channels
+- **Cross-Ledger Reconciliation**: Automated matching between PFMS and blockchain records
 
 ### 🏦 PFMS Integration Features
 - **Real-time Data Sync**: Daily, weekly, and monthly PFMS data synchronization
@@ -176,6 +188,19 @@ SAMANVAY/
 │   ├── routes/             # API route definitions
 │   ├── middleware/         # Authentication and upload middleware
 │   ├── services/           # Business logic and external integrations
+│   ├── blockchain/         # Hyperledger Fabric integration
+│   │   ├── gateway.js      # Fabric Gateway API client
+│   │   ├── wallet.js       # Identity wallet management
+│   │   └── contracts.js    # Smart contract interactions
+│   ├── chaincode/          # Smart contract business logic
+│   │   ├── project.js      # Project lifecycle chaincode
+│   │   ├── fund.js         # Financial transaction chaincode
+│   │   └── audit.js        # Audit trail chaincode
+│   ├── fabric-network/     # Hyperledger Fabric network configuration
+│   │   ├── docker/         # Docker compose files for network
+│   │   ├── configtx/       # Channel and genesis block config
+│   │   ├── crypto-config/  # Cryptographic materials
+│   │   └── scripts/        # Network management scripts
 │   ├── config/             # Database and configuration
 │   └── uploads/            # File storage directory
 │
@@ -183,6 +208,7 @@ SAMANVAY/
     └── SAMANVAY/
         ├── src/
         │   ├── components/  # Reusable UI components
+        │   │   └── blockchain/  # Blockchain-specific UI components
         │   ├── pages/       # Role-specific page components
         │   ├── contexts/    # React context providers
         │   ├── lib/         # Utility functions
@@ -196,8 +222,10 @@ SAMANVAY/
 - **Runtime**: Node.js with ES6+ modules
 - **Framework**: Express.js 5.x
 - **Database**: MongoDB with Mongoose ODM
+- **Blockchain**: Hyperledger Fabric 2.5.x with Node.js SDK
 - **Authentication**: JWT tokens with bcrypt hashing
 - **AI/ML Services**: Groq SDK with LLaMA 3.1 8B Instant model
+- **Smart Contracts**: Hyperledger Fabric Chaincode (JavaScript/TypeScript)
 - **File Handling**: Multer for multipart uploads
 - **PDF Generation**: PDFKit for report generation
 - **Web Scraping**: Puppeteer for data extraction
@@ -229,6 +257,9 @@ Before setting up SAMANVAY, ensure you have:
 - **Node.js** (v18.0 or higher)
 - **npm** (v8.0 or higher)
 - **MongoDB** (v6.0 or higher)
+- **Docker** (v20.0 or higher) for Hyperledger Fabric
+- **Docker Compose** (v2.0 or higher)
+- **Hyperledger Fabric** (v2.5.x) with sample binaries
 - **Git** for version control
 
 ## 🚀 Installation & Setup
@@ -274,6 +305,17 @@ PFMS_API_KEY=your_pfms_api_key
 # AI Services Configuration
 GROQ_API_KEY=your_groq_api_key_for_llama
 
+# Hyperledger Fabric Configuration
+FABRIC_NETWORK_PATH=./fabric-network
+FABRIC_CHANNEL_NAME=samanvay-channel
+FABRIC_CHAINCODE_NAME=samanvay-chaincode
+FABRIC_ORG_MSP_ID=SamanvayMSP
+FABRIC_PEER_ENDPOINT=grpc://localhost:7051
+FABRIC_ORDERER_ENDPOINT=grpc://localhost:7050
+FABRIC_CA_ENDPOINT=https://localhost:7054
+FABRIC_WALLET_PATH=./wallet
+FABRIC_CONNECTION_PROFILE=./connection-profile.json
+
 # Server Configuration
 PORT=5000
 NODE_ENV=development
@@ -308,6 +350,24 @@ sudo systemctl start mongod
 
 # Or using MongoDB Atlas (cloud)
 # Update MONGO_URI in .env with your Atlas connection string
+```
+
+### 5. Hyperledger Fabric Network Setup
+```bash
+# Navigate to fabric network directory
+cd Backend/fabric-network
+
+# Start the Hyperledger Fabric network
+./network.sh up createChannel -c samanvay-channel
+
+# Deploy the SAMANVAY chaincode
+./network.sh deployCC -ccn samanvay-chaincode -ccp ../chaincode -ccl javascript
+
+# Initialize the ledger with genesis data
+node scripts/initLedger.js
+
+# Verify network status
+docker ps -f label=service=hyperledger-fabric
 ```
 
 ## 🏃‍♂️ Running the Application
@@ -720,6 +780,33 @@ GET  /api/chatbot/history              # Retrieve chat conversation history
 DELETE /api/chatbot/history            # Clear chat history
 ```
 
+### Blockchain & Smart Contract Services
+```
+# Project Blockchain Operations
+POST /api/blockchain/project/create           # Create project on blockchain
+GET  /api/blockchain/project/:id/history      # Get immutable project history
+POST /api/blockchain/project/:id/milestone    # Record milestone completion on blockchain
+GET  /api/blockchain/project/:id/audit        # Get complete audit trail
+
+# Financial Blockchain Operations  
+POST /api/blockchain/funds/allocate          # Record fund allocation on blockchain
+POST /api/blockchain/funds/transfer          # Execute blockchain-based fund transfer
+GET  /api/blockchain/funds/:projectId/trail  # Get complete financial audit trail
+POST /api/blockchain/funds/reconcile         # Reconcile PFMS with blockchain records
+
+# Smart Contract Management
+POST /api/blockchain/contract/deploy         # Deploy new chaincode version
+GET  /api/blockchain/contract/query          # Query chaincode functions
+POST /api/blockchain/contract/invoke        # Invoke chaincode transactions
+GET  /api/blockchain/network/status         # Get Fabric network health status
+
+# Digital Asset Management
+POST /api/blockchain/assets/tokenize        # Create digital asset tokens
+GET  /api/blockchain/assets/:assetId        # Get asset details and ownership
+POST /api/blockchain/assets/transfer       # Transfer asset ownership
+GET  /api/blockchain/certificates/:projectId # Get blockchain-verified certificates
+```
+
 ## 📱 PWA Features
 
 SAMANVAY is built as a Progressive Web App (PWA) with:
@@ -735,6 +822,11 @@ SAMANVAY is built as a Progressive Web App (PWA) with:
 - **JWT Authentication** with secure token handling
 - **Password Hashing** using bcrypt with salt rounds
 - **Role-based Access Control** with middleware validation
+- **Blockchain Security**: Hyperledger Fabric's permissioned network architecture
+- **Digital Identity Management**: X.509 certificates and MSP-based identity verification
+- **Cryptographic Data Protection**: End-to-end encryption for sensitive blockchain transactions
+- **Immutable Audit Logs**: Tamper-proof transaction history on distributed ledger
+- **Smart Contract Security**: Validated chaincode with automated vulnerability scanning
 - **Input Sanitization** to prevent injection attacks
 - **CORS Configuration** for cross-origin request security
 - **File Upload Restrictions** with type and size validation
@@ -748,6 +840,9 @@ SAMANVAY is built as a Progressive Web App (PWA) with:
 - **State Performance Comparisons** with ranking systems
 - **Agency Efficiency Metrics** with productivity scoring
 - **Alert Pattern Analysis** for predictive insights
+- **Blockchain Network Monitoring**: Real-time fabric network health and transaction throughput
+- **Smart Contract Analytics**: Chaincode performance metrics and execution statistics
+- **Consensus Monitoring**: Block generation times and endorsement patterns
 
 ### PFMS Integration
 - **Real-time Financial Data** synchronization
@@ -790,11 +885,13 @@ Found a bug or have a feature request?
 ### Upcoming Features
 - [ ] **Mobile App** (React Native)
 - [ ] **Advanced ML Analytics** for predictive insights
-- [ ] **Blockchain Integration** for transparency
+- [ ] **Cross-Chain Interoperability** with other government blockchain networks
 - [ ] **Multi-language Support** 
 - [ ] **Voice Commands** for accessibility
 - [ ] **Advanced Reporting** with custom dashboards
 - [ ] **Integration APIs** for third-party systems
+- [ ] **Quantum-Resistant Cryptography** for future-proof security
+- [ ] **Decentralized Identity (DID)** implementation
 
 ### Current Version: v1.0.0
 
@@ -832,15 +929,21 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 git clone https://github.com/yourusername/SAMANVAY.git
 cd SAMANVAY
 
+# Start Hyperledger Fabric Network
+cd Backend/fabric-network && ./network.sh up createChannel -c samanvay-channel
+./network.sh deployCC -ccn samanvay-chaincode -ccp ../chaincode -ccl javascript
+
 # Backend setup
-cd Backend && npm install && npm run dev
+cd ../.. && npm install && npm run dev
 
 # Frontend setup (in new terminal)
 cd Frontend/SAMANVAY && npm install && npm run dev
 ```
 
 ### System Requirements
-- **RAM**: Minimum 4GB, Recommended 8GB+
-- **Storage**: 500MB free space
-- **Network**: Broadband internet for PFMS sync
+- **RAM**: Minimum 8GB, Recommended 16GB+ (for blockchain network)
+- **Storage**: 2GB free space (includes Docker images and blockchain data)
+- **Network**: Broadband internet for PFMS sync and blockchain peer communication
+- **CPU**: Multi-core processor (recommended for consensus operations)
+- **Docker Memory**: Minimum 4GB allocated to Docker Desktop
 - **Browser**: Modern browsers (Chrome 90+, Firefox 88+, Safari 14+)

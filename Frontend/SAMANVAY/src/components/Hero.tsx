@@ -43,6 +43,11 @@ export default function Hero() {
     },
   };
 
+  // Function to handle demo video redirect
+  const handleViewDemo = () => {
+    window.open("https://youtu.be/ggBGjmi46gE", "_blank");
+  };
+
   return (
     <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -125,6 +130,7 @@ export default function Hero() {
               variant="outline" 
               className="gap-2 min-w-[180px] h-12 text-base font-semibold bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/15 hover:border-orange-400/40 hover:text-orange-100 transition-all duration-300"
               data-testid="button-hero-view-demo"
+              onClick={handleViewDemo}
             >
               <Play className="h-5 w-5" /> View Demo
             </Button>
