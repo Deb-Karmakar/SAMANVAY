@@ -55,217 +55,217 @@ const MOBILE_HEATMAP_CONFIG = {
 // State configuration for centers and GeoJSON file paths
 const stateGeoConfig = {
   'Andaman and Nicobar Islands': {
-    file: '/assets/IndiaStateTopojsonFiles/Andaman.geojson',
+    file: '/IndiaStateTopojsonFiles/Andaman.geojson',
     center: [11.7401, 92.6586],
     zoom: 7,
     mobileZoom: 6
   },
   'Andhra Pradesh': {
-    file: '/assets/IndiaStateTopojsonFiles/AndhraPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/AndhraPradesh.geojson',
     center: [15.9129, 79.7400],
     zoom: 6,
     mobileZoom: 5
   },
   'Arunachal Pradesh': {
-    file: '/assets/IndiaStateTopojsonFiles/ArunachalPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/ArunachalPradesh.geojson',
     center: [28.2180, 94.7278],
     zoom: 6,
     mobileZoom: 5
   },
   'Assam': {
-    file: '/assets/IndiaStateTopojsonFiles/Assam.geojson',
+    file: '/IndiaStateTopojsonFiles/Assam.geojson',
     center: [26.2006, 92.9376],
     zoom: 6,
     mobileZoom: 5
   },
   'Bihar': {
-    file: '/assets/IndiaStateTopojsonFiles/Bihar.geojson',
+    file: '/IndiaStateTopojsonFiles/Bihar.geojson',
     center: [25.0961, 85.3131],
     zoom: 7,
     mobileZoom: 6
   },
   'Chandigarh': {
-    file: '/assets/IndiaStateTopojsonFiles/Chandigarh.geojson',
+    file: '/IndiaStateTopojsonFiles/Chandigarh.geojson',
     center: [30.7333, 76.7794],
     zoom: 9,
     mobileZoom: 8
   },
   'Chhattisgarh': {
-    file: '/assets/IndiaStateTopojsonFiles/Chhattisgarh.geojson',
+    file: '/IndiaStateTopojsonFiles/Chhattisgarh.geojson',
     center: [21.2787, 81.8661],
     zoom: 6,
     mobileZoom: 5
   },
   'Dadra and Nagar Haveli and Daman and Diu': {
-    file: '/assets/IndiaStateTopojsonFiles/DadraAndNagarHaveliAndDamanAndDiu.geojson',
+    file: '/IndiaStateTopojsonFiles/DadraAndNagarHaveliAndDamanAndDiu.geojson',
     center: [20.1809, 73.0169],
     zoom: 8,
     mobileZoom: 7
   },
   'Delhi': {
-    file: '/assets/IndiaStateTopojsonFiles/Delhi.geojson',
+    file: '/IndiaStateTopojsonFiles/Delhi.geojson',
     center: [28.7041, 77.1025],
     zoom: 9,
     mobileZoom: 8
   },
   'Goa': {
-    file: '/assets/IndiaStateTopojsonFiles/Goa.geojson',
+    file: '/IndiaStateTopojsonFiles/Goa.geojson',
     center: [15.2993, 74.1240],
     zoom: 8,
     mobileZoom: 7
   },
   'Gujarat': {
-    file: '/assets/IndiaStateTopojsonFiles/Gujarat.geojson',
+    file: '/IndiaStateTopojsonFiles/Gujarat.geojson',
     center: [22.2587, 71.1924],
     zoom: 6,
     mobileZoom: 5
   },
   'Haryana': {
-    file: '/assets/IndiaStateTopojsonFiles/Haryana.geojson',
+    file: '/IndiaStateTopojsonFiles/Haryana.geojson',
     center: [29.0588, 76.0856],
     zoom: 7,
     mobileZoom: 6
   },
   'Himachal Pradesh': {
-    file: '/assets/IndiaStateTopojsonFiles/HimachalPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/HimachalPradesh.geojson',
     center: [31.1048, 77.1734],
     zoom: 7,
     mobileZoom: 6
   },
   'Jammu and Kashmir': {
-    file: '/assets/IndiaStateTopojsonFiles/JammuAndKashmir.geojson',
+    file: '/IndiaStateTopojsonFiles/JammuAndKashmir.geojson',
     center: [33.7782, 76.5762],
     zoom: 6,
     mobileZoom: 5
   },
   'Jharkhand': {
-    file: '/assets/IndiaStateTopojsonFiles/Jharkhand.geojson',
+    file: '/IndiaStateTopojsonFiles/Jharkhand.geojson',
     center: [23.6102, 85.2799],
     zoom: 7,
     mobileZoom: 6
   },
   'Karnataka': {
-    file: '/assets/IndiaStateTopojsonFiles/Karnataka.geojson',
+    file: '/IndiaStateTopojsonFiles/Karnataka.geojson',
     center: [15.3173, 75.7139],
     zoom: 6,
     mobileZoom: 5
   },
   'Kerala': {
-    file: '/assets/IndiaStateTopojsonFiles/Kerala.geojson',
+    file: '/IndiaStateTopojsonFiles/Kerala.geojson',
     center: [10.8505, 76.2711],
     zoom: 7,
     mobileZoom: 6
   },
   'Ladakh': {
-    file: '/assets/IndiaStateTopojsonFiles/Ladakh.geojson',
+    file: '/IndiaStateTopojsonFiles/Ladakh.geojson',
     center: [34.1526, 77.5770],
     zoom: 6,
     mobileZoom: 5
   },
   'Lakshadweep': {
-    file: '/assets/IndiaStateTopojsonFiles/Lakshadweep.geojson',
+    file: '/IndiaStateTopojsonFiles/Lakshadweep.geojson',
     center: [10.5667, 72.6417],
     zoom: 8,
     mobileZoom: 7
   },
   'Madhya Pradesh': {
-    file: '/assets/IndiaStateTopojsonFiles/MadhyaPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/MadhyaPradesh.geojson',
     center: [23.4733, 77.9470],
     zoom: 6,
     mobileZoom: 5
   },
   'Maharashtra': {
-    file: '/assets/IndiaStateTopojsonFiles/Maharashtra.geojson',
+    file: '/IndiaStateTopojsonFiles/Maharashtra.geojson',
     center: [19.7515, 75.7139],
     zoom: 6,
     mobileZoom: 5
   },
   'Manipur': {
-    file: '/assets/IndiaStateTopojsonFiles/Manipur.geojson',
+    file: '/IndiaStateTopojsonFiles/Manipur.geojson',
     center: [24.6637, 93.9063],
     zoom: 7,
     mobileZoom: 6
   },
   'Meghalaya': {
-    file: '/assets/IndiaStateTopojsonFiles/Meghalaya.geojson',
+    file: '/IndiaStateTopojsonFiles/Meghalaya.geojson',
     center: [25.4670, 91.3662],
     zoom: 7,
     mobileZoom: 6
   },
   'Mizoram': {
-    file: '/assets/IndiaStateTopojsonFiles/Mizoram.geojson',
+    file: '/IndiaStateTopojsonFiles/Mizoram.geojson',
     center: [23.1645, 92.9376],
     zoom: 7,
     mobileZoom: 6
   },
   'Nagaland': {
-    file: '/assets/IndiaStateTopojsonFiles/Nagaland.geojson',
+    file: '/IndiaStateTopojsonFiles/Nagaland.geojson',
     center: [26.1584, 94.5624],
     zoom: 7,
     mobileZoom: 6
   },
   'Odisha': {
-    file: '/assets/IndiaStateTopojsonFiles/Odisha.geojson',
+    file: '/IndiaStateTopojsonFiles/Odisha.geojson',
     center: [20.9517, 85.0985],
     zoom: 6,
     mobileZoom: 5
   },
   'Puducherry': {
-    file: '/assets/IndiaStateTopojsonFiles/Puducherry.geojson',
+    file: '/IndiaStateTopojsonFiles/Puducherry.geojson',
     center: [11.9416, 79.8083],
     zoom: 8,
     mobileZoom: 7
   },
   'Punjab': {
-    file: '/assets/IndiaStateTopojsonFiles/Punjab.geojson',
+    file: '/IndiaStateTopojsonFiles/Punjab.geojson',
     center: [31.1471, 75.3412],
     zoom: 7,
     mobileZoom: 6
   },
   'Rajasthan': {
-    file: '/assets/IndiaStateTopojsonFiles/Rajasthan.geojson',
+    file: '/IndiaStateTopojsonFiles/Rajasthan.geojson',
     center: [27.0238, 74.2179],
     zoom: 6,
     mobileZoom: 5
   },
   'Sikkim': {
-    file: '/assets/IndiaStateTopojsonFiles/Sikkim.geojson',
+    file: '/IndiaStateTopojsonFiles/Sikkim.geojson',
     center: [27.5330, 88.5122],
     zoom: 8,
     mobileZoom: 7
   },
   'Tamil Nadu': {
-    file: '/assets/IndiaStateTopojsonFiles/TamilNadu.geojson',
+    file: '/IndiaStateTopojsonFiles/TamilNadu.geojson',
     center: [11.1271, 78.6569],
     zoom: 6,
     mobileZoom: 5
   },
   'Telangana': {
-    file: '/assets/IndiaStateTopojsonFiles/Telangana.geojson',
+    file: '/IndiaStateTopojsonFiles/Telangana.geojson',
     center: [18.1124, 79.0193],
     zoom: 6,
     mobileZoom: 5
   },
   'Tripura': {
-    file: '/assets/IndiaStateTopojsonFiles/Tripura.geojson',
+    file: '/IndiaStateTopojsonFiles/Tripura.geojson',
     center: [23.9408, 91.9882],
     zoom: 7,
     mobileZoom: 6
   },
   'Uttar Pradesh': {
-    file: '/assets/IndiaStateTopojsonFiles/UttarPradesh.geojson',
+    file: '/IndiaStateTopojsonFiles/UttarPradesh.geojson',
     center: [26.8467, 80.9462],
     zoom: 6,
     mobileZoom: 5
   },
   'Uttarakhand': {
-    file: '/assets/IndiaStateTopojsonFiles/Uttarakhand.geojson',
+    file: '/IndiaStateTopojsonFiles/Uttarakhand.geojson',
     center: [30.0668, 79.0193],
     zoom: 7,
     mobileZoom: 6
   },
   'West Bengal': {
-    file: '/assets/IndiaStateTopojsonFiles/WestBengal.geojson',
+    file: '/IndiaStateTopojsonFiles/WestBengal.geojson',
     center: [24.0, 87.9],
     zoom: 6,
     mobileZoom: 5
