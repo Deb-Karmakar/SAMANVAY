@@ -184,7 +184,9 @@ function MarkdownMessage({ content, role, timestamp, isError }) {
 }
 
 export default function ChatBot() {
+  // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const { userInfo } = useAuth();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
@@ -207,16 +209,11 @@ How can I assist you today?`,
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Don't render if not authenticated
-  if (!userInfo) {
-    return null;
-  }
-
   // Fetch suggestions
   const { data: suggestions = [] } = useQuery({
     queryKey: ['chatSuggestions'],
     queryFn: getSuggestions,
-    enabled: isOpen,
+    enabled: isOpen && !!userInfo, // Only fetch if user is authenticated
   });
 
   // Send message mutation
@@ -279,6 +276,11 @@ How can I help you today?`,
       }, 100);
     }
   }, [isOpen, isMinimized]);
+
+  // ✅ NOW we can do the early return AFTER all hooks are called
+  if (!userInfo) {
+    return null;
+  }
 
   const handleSendMessage = async (messageText = inputMessage) => {
     if (!messageText.trim() || sendMessageMutation.isPending) return;
@@ -440,7 +442,7 @@ How can I help you today?`,
                 ))}
                 {sendMessageMutation.isPending && (
                   <div className="flex justify-start">
-                                        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
+                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                         <span className="text-sm text-gray-500">AI is thinking...</span>
