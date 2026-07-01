@@ -21,7 +21,7 @@ class PFMSService {
     
     // Mock PFMS API Call (simulates external API)
     async mockPFMSAPICall(fiscalYear) {
-        console.log(`📡 Calling PFMS API for fiscal year ${fiscalYear}...`);
+        console.log(`Calling PFMS API for fiscal year ${fiscalYear}...`);
         
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -154,7 +154,7 @@ class PFMSService {
     // Sync PFMS data from mock API
     async syncRealPFMSData(fiscalYear) {
     try {
-        console.log(`🔄 Starting REAL PFMS data sync for ${fiscalYear}...`);
+        console.log(`Starting REAL PFMS data sync for ${fiscalYear}...`);
         
         // Calculate real data from projects
         const pfmsData = await pfmsRealDataService.calculateRealPFMSData(fiscalYear);
@@ -167,13 +167,13 @@ class PFMSService {
             existingData.calculateRates();
             existingData.updateStatePerformance();
             await existingData.save();
-            console.log(`✅ Updated PFMS data for ${fiscalYear} with REAL project data`);
+            console.log(`Updated PFMS data for ${fiscalYear} with REAL project data`);
         } else {
             existingData = new PFMSData(pfmsData);
             existingData.calculateRates();
             existingData.updateStatePerformance();
             await existingData.save();
-            console.log(`✅ Created new PFMS data for ${fiscalYear} with REAL project data`);
+            console.log(`Created new PFMS data for ${fiscalYear} with REAL project data`);
         }
         
         // Generate predictions
@@ -182,7 +182,7 @@ class PFMSService {
         return existingData;
         
     } catch (error) {
-        console.error('❌ Real PFMS sync failed:', error);
+        console.error('Real PFMS sync failed:', error);
         throw error;
     }
 }
@@ -190,7 +190,7 @@ class PFMSService {
 
     async syncPFMSData(fiscalYear) {
         try {
-            console.log(`🔄 Starting PFMS sync for ${fiscalYear}...`);
+            console.log(`Starting PFMS sync for ${fiscalYear}...`);
             
             // Call mock PFMS API
             const pfmsData = await this.mockPFMSAPICall(fiscalYear);
@@ -203,13 +203,13 @@ class PFMSService {
                 existingData.calculateRates();
                 existingData.updateStatePerformance();
                 await existingData.save();
-                console.log(`✅ Updated PFMS data for ${fiscalYear}`);
+                console.log(`Updated PFMS data for ${fiscalYear}`);
             } else {
                 existingData = new PFMSData(pfmsData);
                 existingData.calculateRates();
                 existingData.updateStatePerformance();
                 await existingData.save();
-                console.log(`✅ Created new PFMS data for ${fiscalYear}`);
+                console.log(`Created new PFMS data for ${fiscalYear}`);
             }
             
             // Generate predictions
@@ -218,7 +218,7 @@ class PFMSService {
             return existingData;
             
         } catch (error) {
-            console.error('❌ PFMS sync failed:', error);
+            console.error('PFMS sync failed:', error);
             throw error;
         }
     }
@@ -226,7 +226,7 @@ class PFMSService {
     // Sync with real project data from database
     async syncWithProjectData(fiscalYear) {
         try {
-            console.log(`🔄 Syncing PFMS with actual project data...`);
+            console.log(`Syncing PFMS with actual project data...`);
             
             const pfmsData = await PFMSData.findOne({ fiscalYear });
             if (!pfmsData) {
@@ -280,11 +280,11 @@ class PFMSService {
             pfmsData.updateStatePerformance();
             await pfmsData.save();
             
-            console.log(`✅ Synced PFMS with project data`);
+            console.log(`Synced PFMS with project data`);
             return pfmsData;
             
         } catch (error) {
-            console.error('❌ Project data sync failed:', error);
+            console.error('Project data sync failed:', error);
             throw error;
         }
     }
@@ -343,7 +343,7 @@ class PFMSService {
             await pfmsData.save();
             
         } catch (error) {
-            console.error('❌ Prediction generation failed:', error);
+            console.error('Prediction generation failed:', error);
         }
     }
     
@@ -364,7 +364,7 @@ class PFMSService {
             });
             
             await transaction.save();
-            console.log(`✅ Recorded transaction: ${transaction.transactionId}`);
+            console.log(`Recorded transaction: ${transaction.transactionId}`);
             
             // Update PFMS data based on transaction
             await this.updatePFMSFromTransaction(transaction);
@@ -372,7 +372,7 @@ class PFMSService {
             return transaction;
             
         } catch (error) {
-            console.error('❌ Transaction recording failed:', error);
+            console.error('Transaction recording failed:', error);
             throw error;
         }
     }
@@ -485,11 +485,11 @@ class PFMSService {
     async initializeFiscalYear(fiscalYear) {
         const existing = await PFMSData.findOne({ fiscalYear });
         if (existing) {
-            console.log(`ℹ️  PFMS data already exists for ${fiscalYear}`);
+            console.log(`️  PFMS data already exists for ${fiscalYear}`);
             return existing;
         }
         
-        console.log(`🆕 Initializing PFMS data for ${fiscalYear}...`);
+        console.log(`Initializing PFMS data for ${fiscalYear}...`);
         return await this.syncPFMSData(fiscalYear);
     }
 }

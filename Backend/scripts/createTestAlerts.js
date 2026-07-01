@@ -15,7 +15,7 @@ const createTestAlerts = async () => {
   const project = await Project.findOne();
   
   if (!agencyUser || !stateOfficer || !project) {
-    console.error('❌ Missing required test data');
+    console.error('Missing required test data');
     process.exit(1);
   }
   
@@ -48,7 +48,7 @@ const createTestAlerts = async () => {
     updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
   });
   
-  console.log('✅ Test alerts created');
+  console.log('Test alerts created');
   process.exit(0);
 };
 

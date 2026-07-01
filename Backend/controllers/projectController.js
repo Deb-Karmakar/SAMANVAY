@@ -13,7 +13,7 @@ import { getCoordsForProject } from '../utils/geocoder.js';
 // @route  POST /api/projects
 const createProject = async (req, res) => {
     try {
-        console.log('📝 Creating project with data:', req.body);
+        console.log(' Creating project with data:', req.body);
         
         // 1. Create project data object and add geocoding BEFORE creating project instance
         const projectData = { ...req.body, createdBy: req.user._id };
@@ -23,7 +23,7 @@ const createProject = async (req, res) => {
             const location = getCoordsForProject(projectData.district, projectData.state);
             if (location) {
                 projectData.location = location;
-                console.log(`📍 Geocoded project to ${projectData.district}, ${projectData.state}`);
+                console.log(` Geocoded project to ${projectData.district}, ${projectData.state}`);
             }
         }
 
@@ -31,22 +31,22 @@ const createProject = async (req, res) => {
         const project = new Project(projectData);
         const createdProject = await project.save();
         
-        console.log('✅ Project created:', createdProject._id);
+        console.log('Project created:', createdProject._id);
 
         // 4. Continue with PDF generation and email notifications
-        console.log('📄 Generating PDF...');
+        console.log(' Generating PDF...');
         const pdfResult = await generateProjectApprovalPDF(createdProject);
-        console.log('✅ PDF generated:', pdfResult.filename);
+        console.log('PDF generated:', pdfResult.filename);
 
         // Find state officer email
-        console.log('🔍 Looking for state officer in state:', createdProject.state);
+        console.log('Looking for state officer in state:', createdProject.state);
         const stateOfficer = await User.findOne({ 
             role: 'StateOfficer', 
             state: createdProject.state,
             isActive: true
         });
 
-        console.log('👤 State officer found:', stateOfficer ? stateOfficer.email : 'NONE');
+        console.log(' State officer found:', stateOfficer ? stateOfficer.email : 'NONE');
 
         if (stateOfficer) {
             const emailContent = emailTemplates.projectCreated(
@@ -55,8 +55,8 @@ const createProject = async (req, res) => {
                 createdProject._id
             );
 
-            console.log('📧 Sending email to:', stateOfficer.email);
-            console.log('📧 Email subject:', emailContent.subject);
+            console.log('Sending email to:', stateOfficer.email);
+            console.log('Email subject:', emailContent.subject);
 
             try {
                 await sendEmail({
@@ -69,7 +69,7 @@ const createProject = async (req, res) => {
                     }]
                 });
 
-                console.log('✅ Email sent successfully');
+                console.log('Email sent successfully');
 
                 await CommunicationLog.create({
                     type: 'email',
@@ -86,8 +86,8 @@ const createProject = async (req, res) => {
                     sentAt: new Date()
                 });
             } catch (emailError) {
-                console.error('❌ Email sending failed:', emailError);
-                console.error('❌ Full error:', emailError.stack);
+                console.error('Email sending failed:', emailError);
+                console.error('Full error:', emailError.stack);
                 
                 await CommunicationLog.create({
                     type: 'email',
@@ -100,7 +100,7 @@ const createProject = async (req, res) => {
                 });
             }
         } else {
-            console.warn('⚠️ No active state officer found for state:', createdProject.state);
+            console.warn('No active state officer found for state:', createdProject.state);
         }
 
         res.status(201).json({
@@ -108,8 +108,8 @@ const createProject = async (req, res) => {
             pdf: pdfResult
         });
     } catch (error) {
-        console.error("❌ Project creation failed:", error);
-        console.error("❌ Full error:", error.stack);
+        console.error("Project creation failed:", error);
+        console.error("Full error:", error.stack);
         res.status(400).json({ message: "Failed to create project", error: error.message });
     }
 };
@@ -353,8 +353,8 @@ const submitMilestoneForReview = async (req, res) => {
         const { projectId, assignmentIndex, checklistIndex } = req.params;
         const { proofImages } = req.body;
 
-        console.log('📝 Submitting milestone:', { projectId, assignmentIndex, checklistIndex });
-        console.log('👤 User agencyId:', req.user.agencyId);
+        console.log(' Submitting milestone:', { projectId, assignmentIndex, checklistIndex });
+        console.log(' User agencyId:', req.user.agencyId);
 
         const project = await Project.findById(projectId).populate('assignments.agency');
 
@@ -367,11 +367,11 @@ const submitMilestoneForReview = async (req, res) => {
         // Fix: Handle both populated and non-populated agency
         const assignmentAgencyId = assignment.agency._id || assignment.agency;
         
-        console.log('🏢 Assignment agencyId:', assignmentAgencyId.toString());
-        console.log('✅ Match:', assignmentAgencyId.toString() === req.user.agencyId.toString());
+        console.log('Assignment agencyId:', assignmentAgencyId.toString());
+        console.log('Match:', assignmentAgencyId.toString() === req.user.agencyId.toString());
 
         if (assignmentAgencyId.toString() !== req.user.agencyId.toString()) {
-            console.error('❌ Authorization failed - Agency mismatch');
+            console.error('Authorization failed - Agency mismatch');
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -429,7 +429,7 @@ const submitMilestoneForReview = async (req, res) => {
 
         res.status(200).json(project);
     } catch (error) {
-        console.error('❌ Failed to submit milestone:', error);
+        console.error('Failed to submit milestone:', error);
         res.status(400).json({ message: "Failed to submit milestone", error: error.message });
     }
 };
@@ -582,21 +582,21 @@ const getProjectsWithPendingReviews = async (req, res) => {
 };
 
 const getProjectLocations = asyncHandler(async (req, res) => {
-    console.log('🗺️ GET PROJECT LOCATIONS - User role:', req.user.role);
+    console.log('️ GET PROJECT LOCATIONS - User role:', req.user.role);
     
     // Allow Admin OR CentralAdmin
     if (req.user.role !== 'Admin' && req.user.role !== 'CentralAdmin') {
-        console.log('❌ Authorization failed - User is not admin');
+        console.log('Authorization failed - User is not admin');
         return res.status(403).json({ message: 'Only admins can view all project locations' });
     }
 
-    console.log('✅ Authorization passed - Fetching locations');
+    console.log('Authorization passed - Fetching locations');
     
     const projects = await Project.find({ 
         'location.coordinates': { $exists: true, $ne: [] } 
     }).select('name status component location budget progress state district');
 
-    console.log(`✅ Found ${projects.length} projects with locations`);
+    console.log(`Found ${projects.length} projects with locations`);
     res.json(projects);
 });
 
@@ -612,19 +612,19 @@ const getProjectLocationsForState = asyncHandler(async (req, res) => {
 // @desc   Get project locations for logged-in agency
 // @route  GET /api/projects/locations/myagency
 const getProjectLocationsForAgency = asyncHandler(async (req, res) => {
-    console.log('🗺️ GET AGENCY PROJECT LOCATIONS - User:', req.user.email);
+    console.log('️ GET AGENCY PROJECT LOCATIONS - User:', req.user.email);
     
     if (req.user.role !== 'ExecutingAgency') {
-        console.log('❌ Authorization failed - User is not an agency');
+        console.log('Authorization failed - User is not an agency');
         return res.status(403).json({ message: 'Only executing agencies can view their project locations' });
     }
 
     if (!req.user.agencyId) {
-        console.log('❌ Agency ID not found for user');
+        console.log('Agency ID not found for user');
         return res.status(400).json({ message: 'Agency ID not found' });
     }
 
-    console.log('✅ Fetching locations for agencyId:', req.user.agencyId);
+    console.log('Fetching locations for agencyId:', req.user.agencyId);
     
     // Find projects assigned to this agency with valid locations
     const projects = await Project.find({ 
@@ -653,7 +653,7 @@ const getProjectLocationsForAgency = asyncHandler(async (req, res) => {
         };
     });
 
-    console.log(`✅ Found ${filteredProjects.length} projects with locations for agency`);
+    console.log(`Found ${filteredProjects.length} projects with locations for agency`);
     res.json(filteredProjects);
 });
 
@@ -671,5 +671,5 @@ export {
     getProjectsWithPendingReviews,
     getProjectLocations,
     getProjectLocationsForState,
-    getProjectLocationsForAgency  // ← ADD THIS
+    getProjectLocationsForAgency  //  ADD THIS
 };

@@ -4,10 +4,10 @@ import Project from '../models/projectModel.js';
 
 class AgencyMatchingService {
   constructor() {
-    this.groqClient = null; // ✅ Will be initialized on first use
+    this.groqClient = null; // Will be initialized on first use
   }
 
-  // ✅ Initialize Groq client only when needed
+  // Initialize Groq client only when needed
   getGroqClient() {
     if (!this.groqClient) {
       if (!process.env.GROQ_API_KEY) {
@@ -62,7 +62,7 @@ class AgencyMatchingService {
       score += budgetScore;
       reasons.push(`Budget efficiency: ${budgetEfficiency.toFixed(1)}%`);
 
-      // ✅ NEW: 6. New Agency Bonus (5 points)
+      // NEW: 6. New Agency Bonus (5 points)
       // Give new/less experienced agencies a fair chance
       if (similarProjectsCount === 0) {
         const newAgencyBonus = 5;
@@ -176,7 +176,7 @@ PROJECT DETAILS:
 - Name: ${projectData.name}
 - Component: ${projectData.component}
 - District: ${projectData.district}
-- Budget: ₹${projectData.budget?.toLocaleString() || 'Not specified'}
+- Budget: ${projectData.budget?.toLocaleString() || 'Not specified'}
 - Description: ${projectData.description || 'N/A'}
 
 TOP CANDIDATE AGENCIES (Pre-filtered by rule engine):
@@ -214,7 +214,7 @@ Respond in this JSON format:
 
 Be professional, objective, and focus on the project's success. Don't penalize new agencies too harshly - everyone starts somewhere.`;
 
-      // ✅ Use lazy-initialized client
+      // Use lazy-initialized client
       const groq = this.getGroqClient();
 
       const completion = await groq.chat.completions.create({
@@ -274,7 +274,7 @@ Be professional, objective, and focus on the project's success. Don't penalize n
       // Phase 1: Rule-based scoring
       const scoredAgencies = await this.scoreAgencies(projectData, agencies);
 
-      // ✅ UPDATED: Lower minimum threshold from 60 to 40
+      // UPDATED: Lower minimum threshold from 60 to 40
       const qualifiedAgencies = scoredAgencies.filter(item => item.score >= 40);
 
       if (qualifiedAgencies.length === 0) {

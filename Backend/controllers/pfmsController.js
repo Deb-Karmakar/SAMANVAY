@@ -17,12 +17,12 @@ const getDashboard = asyncHandler(async (req, res) => {
     
     // If no data exists, initialize it automatically
     if (!pfmsData) {
-        console.log(`⚠️ No PFMS data found for ${fiscalYear}. Initializing...`);
+        console.log(`No PFMS data found for ${fiscalYear}. Initializing...`);
         try {
             pfmsData = await pfmsService.syncPFMSData(fiscalYear);
-            console.log(`✅ PFMS data initialized for ${fiscalYear}`);
+            console.log(`PFMS data initialized for ${fiscalYear}`);
         } catch (error) {
-            console.error('❌ Failed to initialize PFMS data:', error);
+            console.error('Failed to initialize PFMS data:', error);
             res.status(500);
             throw new Error('Failed to initialize PFMS data. Please try the Sync button.');
         }

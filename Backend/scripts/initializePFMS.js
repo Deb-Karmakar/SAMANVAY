@@ -8,21 +8,21 @@ const initializePFMS = async () => {
     try {
         await connectDB();
         
-        console.log('🏦 Initializing PFMS data...');
+        console.log('Initializing PFMS data...');
         
         // Initialize for current and past fiscal years
         const fiscalYears = ['2023-24', '2024-25', '2025-26'];
         
         for (const year of fiscalYears) {
-            console.log(`\n📊 Processing fiscal year: ${year}`);
+            console.log(`\nProcessing fiscal year: ${year}`);
             await pfmsService.syncPFMSData(year);
-            console.log(`✅ Completed ${year}`);
+            console.log(`Completed ${year}`);
         }
         
-        console.log('\n🎉 PFMS initialization completed successfully!');
+        console.log('\nPFMS initialization completed successfully!');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Initialization failed:', error);
+        console.error('Initialization failed:', error);
         process.exit(1);
     }
 };

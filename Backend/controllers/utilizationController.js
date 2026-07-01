@@ -54,7 +54,7 @@ export const submitUtilizationReport = asyncHandler(async (req, res) => {
         <h1>Submission Receipt</h1>
         <p><strong>Report ID:</strong> ${newReport._id}</p>
         <p><strong>Project:</strong> ${project.name}</p>
-        <p><strong>Amount:</strong> ₹${(newReport.amount / 100000).toFixed(2)} Lakhs</p>
+        <p><strong>Amount:</strong> ${(newReport.amount / 100000).toFixed(2)} Lakhs</p>
         <p><strong>Status:</strong> ${newReport.status}</p>
         <p>Submitted on ${newReport.createdAt.toLocaleString('en-IN')}. Your report is now pending review.</p>
     `;
@@ -140,7 +140,7 @@ export const reviewUtilizationReport = asyncHandler(async (req, res) => {
             severity: 'info',
             project: report.project._id,
             agency: report.agency._id,
-            message: `Your utilization report of ₹${(report.amount / 100000).toFixed(2)} Lakhs for "${report.project.name}" has been ${report.status}.`,
+            message: `Your utilization report of ${(report.amount / 100000).toFixed(2)} Lakhs for "${report.project.name}" has been ${report.status}.`,
             metadata: { status: report.status, comments: reviewComments }
         });
 

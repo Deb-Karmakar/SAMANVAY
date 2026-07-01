@@ -11,14 +11,14 @@ dotenv.config();
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB Connected for seeding...');
+    console.log('MongoDB Connected for seeding...');
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error);
+    console.error('MongoDB connection failed:', error);
     process.exit(1);
   }
 };
 
-// ✅ CORRECT GEOGRAPHIC COORDINATES FOR INDIAN DISTRICTS
+// CORRECT GEOGRAPHIC COORDINATES FOR INDIAN DISTRICTS
 const districtCoordinates = {
   // West Bengal
   'Kolkata': [88.3639, 22.5726],
@@ -67,7 +67,7 @@ const districtCoordinates = {
 const getCoordinatesForDistrict = (district) => {
   const baseCoords = districtCoordinates[district];
   if (!baseCoords) {
-    console.warn(`⚠️  No coordinates found for ${district}, using default`);
+    console.warn(` No coordinates found for ${district}, using default`);
     return [77.5946, 12.9716]; // Default to Bangalore
   }
   
@@ -203,7 +203,7 @@ const generateMobile = () => {
 
 // Seed State Officers
 const seedStateOfficers = async () => {
-  console.log('\n📋 Seeding State Officers...');
+  console.log('\n Seeding State Officers...');
   
   const stateOfficers = [];
   
@@ -223,7 +223,7 @@ const seedStateOfficers = async () => {
     stateOfficers.push(officer);
   }
   
-  // ✅ UPDATED: Use updateMany with upsert to avoid duplicates
+  // UPDATED: Use updateMany with upsert to avoid duplicates
   for (const officer of stateOfficers) {
     await User.updateOne(
       { email: officer.email },
@@ -234,9 +234,9 @@ const seedStateOfficers = async () => {
   
   const createdOfficers = await User.find({ role: 'StateOfficer' });
   
-  console.log(`✅ Created/Updated ${createdOfficers.length} state officers`);
+  console.log(`Created/Updated ${createdOfficers.length} state officers`);
   createdOfficers.forEach(officer => {
-    console.log(`   📧 ${officer.email} / password123`);
+    console.log(`   ${officer.email} / password123`);
   });
   
   return createdOfficers;
@@ -244,7 +244,7 @@ const seedStateOfficers = async () => {
 
 // Seed Agencies
 const seedAgencies = async () => {
-  console.log('\n🏢 Seeding Agencies...');
+  console.log('\nSeeding Agencies...');
   
   const agencies = [];
   
@@ -277,7 +277,7 @@ const seedAgencies = async () => {
   await Agency.deleteMany({});
   const createdAgencies = await Agency.insertMany(agencies);
   
-  console.log(`✅ Created ${createdAgencies.length} agencies across ${statesData.length} states`);
+  console.log(`Created ${createdAgencies.length} agencies across ${statesData.length} states`);
   
   // Show distribution
   statesData.forEach(stateData => {
@@ -290,7 +290,7 @@ const seedAgencies = async () => {
 
 // Seed Projects with Assignment History
 const seedProjects = async (agencies, stateOfficers) => {
-  console.log('\n📦 Seeding Projects...');
+  console.log('\n Seeding Projects...');
   
   const projects = [];
   const assignmentHistory = [];
@@ -305,7 +305,7 @@ const seedProjects = async (agencies, stateOfficers) => {
     for (let i = 0; i < projectCount; i++) {
       const district = stateData.districts[Math.floor(Math.random() * stateData.districts.length)];
       const component = components[Math.floor(Math.random() * components.length)];
-      const status = getWeightedStatus(); // ✅ UPDATED: Using weighted distribution
+      const status = getWeightedStatus(); // UPDATED: Using weighted distribution
       
       const startDate = randomDate(new Date(2023, 0, 1), new Date(2024, 0, 1));
       const endDate = new Date(startDate);
@@ -313,7 +313,7 @@ const seedProjects = async (agencies, stateOfficers) => {
       
       const budget = generateBudget(component);
       
-      // ✅ UPDATED: 85% assigned, 15% unassigned
+      // UPDATED: 85% assigned, 15% unassigned
       const shouldAssign = Math.random() > 0.15;
       
       let progress = 0;
@@ -407,7 +407,7 @@ const seedProjects = async (agencies, stateOfficers) => {
         endDate,
         description: `Implementation of ${component} scheme in ${district} district under PM-AJAY program. This project aims to provide comprehensive development and welfare services to the scheduled caste community.`,
         assignments,
-        // ✅ UPDATED: Using correct coordinates
+        // UPDATED: Using correct coordinates
         location: {
           type: 'Point',
           coordinates: getCoordinatesForDistrict(district),
@@ -422,10 +422,10 @@ const seedProjects = async (agencies, stateOfficers) => {
   await Project.deleteMany({});
   const createdProjects = await Project.insertMany(projects);
   
-  console.log(`✅ Created ${createdProjects.length} projects`);
+  console.log(`Created ${createdProjects.length} projects`);
   
   // Show statistics
-  console.log('\n📊 Project Statistics:');
+  console.log('\nProject Statistics:');
   statesData.forEach(stateData => {
     const stateProjects = createdProjects.filter(p => p.state === stateData.state);
     const assigned = stateProjects.filter(p => p.assignments.length > 0).length;
@@ -482,7 +482,7 @@ const seedProjects = async (agencies, stateOfficers) => {
 
 // Seed Agency Users
 const seedAgencyUsers = async () => {
-  console.log('\n👥 Seeding Agency Users...');
+  console.log('\n Seeding Agency Users...');
   
   const agencyUsers = [];
   
@@ -510,8 +510,8 @@ const seedAgencyUsers = async () => {
   await User.deleteMany({ role: 'ExecutingAgency' });
   const createdUsers = await User.insertMany(agencyUsers);
   
-  console.log(`✅ Created ${createdUsers.length} agency users`);
-  console.log(`   📧 Login: [agency-email] / password123`);
+  console.log(`Created ${createdUsers.length} agency users`);
+  console.log(`   Login: [agency-email] / password123`);
   
   return createdUsers;
 };
@@ -521,7 +521,7 @@ const seedDatabase = async () => {
   try {
     await connectDB();
     
-    console.log('\n🌱 Starting database seeding...\n');
+    console.log('\n Starting database seeding...\n');
     console.log('=' .repeat(60));
     
     const stateOfficers = await seedStateOfficers();
@@ -530,18 +530,18 @@ const seedDatabase = async () => {
     const agencyUsers = await seedAgencyUsers();
     
     console.log('\n' + '='.repeat(60));
-    console.log('\n✅ Database seeding completed successfully!\n');
+    console.log('\nDatabase seeding completed successfully!\n');
     
-    console.log('📝 Summary:');
+    console.log(' Summary:');
     console.log(`   States: ${statesData.length}`);
     console.log(`   State Officers: ${stateOfficers.length}`);
     console.log(`   Agencies: ${agencies.length}`);
     console.log(`   Projects: ${projects.length}`);
     console.log(`   Agency Users: ${agencyUsers.length}`);
     
-    console.log('\n🔐 Test Credentials:');
-    console.log('\n   🌟 YOUR ACCOUNT (West Bengal):');
-    console.log(`      📧 debk619@gmail.com / password123`);
+    console.log('\n Test Credentials:');
+    console.log('\n    YOUR ACCOUNT (West Bengal):');
+    console.log(`      debk619@gmail.com / password123`);
     
     console.log('\n   Other State Officers:');
     stateOfficers.filter(o => o.email !== 'debk619@gmail.com').forEach(officer => {
@@ -554,14 +554,14 @@ const seedDatabase = async () => {
       console.log(`      ${user.email} / password123`);
     });
     
-    console.log('\n🗺️  Geographic Coverage:');
+    console.log('\n️  Geographic Coverage:');
     console.log('   All projects now have CORRECT coordinates:');
     statesData.forEach(stateData => {
       const districtList = stateData.districts.join(', ');
       console.log(`   ${stateData.state}: ${districtList}`);
     });
     
-    console.log('\n💡 Next Steps:');
+    console.log('\n Next Steps:');
     console.log('   1. Login as: debk619@gmail.com / password123');
     console.log('   2. Go to Projects page');
     console.log('   3. Click on an unassigned project (orange highlight)');
@@ -572,7 +572,7 @@ const seedDatabase = async () => {
     
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Seeding failed:', error);
+    console.error('\nSeeding failed:', error);
     process.exit(1);
   }
 };

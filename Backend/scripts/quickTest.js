@@ -8,7 +8,7 @@ dotenv.config();
 const quickAnalysis = async () => {
   await mongoose.connect(process.env.MONGO_URI);
   
-  console.log('\n📊 Quick Database Analysis\n');
+  console.log('\nQuick Database Analysis\n');
   console.log('='.repeat(50));
   
   // Agency Analysis
@@ -18,7 +18,7 @@ const quickAnalysis = async () => {
     { $sort: { count: -1 } }
   ]);
   
-  console.log('\n🏢 Agencies:');
+  console.log('\nAgencies:');
   console.log(`   Total: ${totalAgencies}`);
   agenciesByState.forEach(({ _id, count }) => {
     console.log(`   ${_id}: ${count}`);
@@ -36,7 +36,7 @@ const quickAnalysis = async () => {
     { $sort: { count: -1 } }
   ]);
   
-  console.log('\n📦 Projects:');
+  console.log('\n Projects:');
   console.log(`   Total: ${totalProjects}`);
   console.log(`   Assigned: ${assignedProjects}`);
   console.log(`   Unassigned: ${unassignedProjects}`);
@@ -70,7 +70,7 @@ const quickAnalysis = async () => {
     { $limit: 10 }
   ]);
   
-  console.log('\n🏆 Top 10 Agencies by Completed Projects:');
+  console.log('\n Top 10 Agencies by Completed Projects:');
   agencyPerformance.forEach(({ _id, totalProjects, completedProjects }, index) => {
     const rate = ((completedProjects / totalProjects) * 100).toFixed(1);
     console.log(`   ${index + 1}. ${_id}`);
@@ -85,7 +85,7 @@ const quickAnalysis = async () => {
     component: { $exists: true }
   }).limit(5);
   
-  console.log('\n🎯 Projects Ready for AI Recommendations:');
+  console.log('\n Projects Ready for AI Recommendations:');
   recommendationReady.forEach((project, index) => {
     console.log(`   ${index + 1}. ${project.name}`);
     console.log(`      ${project.state} - ${project.district} - ${project.component}`);

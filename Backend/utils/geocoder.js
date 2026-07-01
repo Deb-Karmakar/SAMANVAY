@@ -19,10 +19,10 @@ try {
         throw new Error("The districts JSON file is not an array.");
     }
     
-    console.log(`✅ Geocoder successfully loaded ${districts.length} districts from file.`);
+    console.log(`Geocoder successfully loaded ${districts.length} districts from file.`);
 
 } catch (error) {
-    console.error('❌ CRITICAL: Failed to load or parse india-districts.json for geocoder.', error);
+    console.error('CRITICAL: Failed to load or parse india-districts.json for geocoder.', error);
 }
 
 export const getCoordsForProject = (districtName, stateName) => {
@@ -41,6 +41,6 @@ export const getCoordsForProject = (districtName, stateName) => {
         };
     }
     
-    console.warn(`⚠️  Geocoder couldn't find coordinates for District: ${districtName}, State: ${stateName}`);
+    console.warn(` Geocoder couldn't find coordinates for District: ${districtName}, State: ${stateName}`);
     return null;
 };

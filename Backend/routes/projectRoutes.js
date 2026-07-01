@@ -15,7 +15,7 @@ import {
     getProjectsWithPendingReviews,
     getProjectLocations,
     getProjectLocationsForState,
-    getProjectLocationsForAgency  // ← ADD THIS
+    getProjectLocationsForAgency  //  ADD THIS
 } from '../controllers/projectController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -60,15 +60,15 @@ router.get('/pending-reviews', protect, async (req, res, next) => {
 // CREATE PROJECT - Admin only
 // ============================================
 router.post('/', protect, async (req, res, next) => {
-    console.log('🔒 CREATE PROJECT - User role:', req.user.role);
+    console.log(' CREATE PROJECT - User role:', req.user.role);
     
-    // ✅ FIXED: Use OR operator and correct logic
+    // FIXED: Use OR operator and correct logic
     if (!isAdmin(req.user.role)) {
-        console.log('❌ Authorization failed - User is not admin');
+        console.log('Authorization failed - User is not admin');
         return res.status(403).json({ message: 'Not authorized - Admin access required' });
     }
     
-    console.log('✅ Authorization passed');
+    console.log('Authorization passed');
     next();
 }, createProject);
 
@@ -76,27 +76,27 @@ router.post('/', protect, async (req, res, next) => {
 // GET ALL PROJECTS - Role-based access
 // ============================================
 router.get('/', protect, async (req, res, next) => {
-    console.log('🔒 GET PROJECTS - User role:', req.user.role);
+    console.log(' GET PROJECTS - User role:', req.user.role);
     
-    // ✅ FIXED: Use OR operator for admin check
+    // FIXED: Use OR operator for admin check
     if (isAdmin(req.user.role)) {
-        console.log('✅ Admin access - showing all projects');
+        console.log('Admin access - showing all projects');
         return next();
     }
     
     // State Officer sees only their state's projects
     if (req.user.role === 'StateOfficer') {
-        console.log('✅ State Officer access - showing state projects');
+        console.log('State Officer access - showing state projects');
         return getMyStateProjects(req, res);
     }
     
     // Agency sees only their projects
     if (req.user.role === 'ExecutingAgency') {
-        console.log('✅ Agency access - showing agency projects');
+        console.log('Agency access - showing agency projects');
         return getMyAgencyProjects(req, res);
     }
     
-    console.log('❌ Authorization failed - Invalid role');
+    console.log('Authorization failed - Invalid role');
     return res.status(403).json({ message: 'Not authorized' });
 }, getProjects);
 
@@ -106,7 +106,7 @@ router.get('/', protect, async (req, res, next) => {
 
 // Assign agency to project (State Officer or Admin)
 router.put('/:id/assign', protect, async (req, res, next) => {
-    // ✅ FIXED: Cleaner logic
+    // FIXED: Cleaner logic
     if (req.user.role !== 'StateOfficer' && !isAdmin(req.user.role)) {
         return res.status(403).json({ message: 'Not authorized' });
     }
@@ -115,7 +115,7 @@ router.put('/:id/assign', protect, async (req, res, next) => {
 
 // Add assignments to project (State Officer or Admin)
 router.post('/:id/assignments', protect, async (req, res, next) => {
-    // ✅ FIXED: Cleaner logic
+    // FIXED: Cleaner logic
     if (req.user.role !== 'StateOfficer' && !isAdmin(req.user.role)) {
         return res.status(403).json({ message: 'Not authorized' });
     }
@@ -160,7 +160,7 @@ router.get('/:id', protect, getProjectById);
 // Get project locations for state officer's state
 router.get('/locations/mystate', protect, getProjectLocationsForState);
 
-// Get project locations for agency (ADD THIS) ↓
+// Get project locations for agency (ADD THIS) 
 router.get('/locations/myagency', protect, async (req, res, next) => {
     if (req.user.role !== 'ExecutingAgency') {
         return res.status(403).json({ message: 'Not authorized' });

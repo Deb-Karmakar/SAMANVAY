@@ -122,7 +122,7 @@ export const generateProjectApprovalPDF = (project) => {
         
         // Budget
         doc.text('Sanctioned Budget:', labelX, yPos);
-        doc.text(`₹${(project.budget / 100000).toFixed(2)} Lakhs`, valueX, yPos);
+        doc.text(`${(project.budget / 100000).toFixed(2)} Lakhs`, valueX, yPos);
         yPos += 25;
         
         // Draw box around details
@@ -252,7 +252,7 @@ export const generateAssignmentOrderPDF = (project, assignments) => {
         doc.text(`Component: ${project.component}`);
         doc.text(`State: ${project.state}`);
         if (project.district) doc.text(`District: ${project.district}`);
-        doc.text(`Budget: ₹${(project.budget / 100000).toFixed(2)} Lakhs`);
+        doc.text(`Budget: ${(project.budget / 100000).toFixed(2)} Lakhs`);
         
         doc.moveDown(2);
 

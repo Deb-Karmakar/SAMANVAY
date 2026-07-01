@@ -226,13 +226,13 @@ class AlertService {
     // Process all active projects
     async generateAllAlerts() {
         try {
-            console.log('🔍 Starting automatic status update and alert generation...');
+            console.log('Starting automatic status update and alert generation...');
             
             const projects = await Project.find({
                 status: { $in: ['On Track', 'Delayed', 'Pending Approval'] }
             }).populate('assignments.agency');
             
-            console.log(`📊 Evaluating ${projects.length} active projects...`);
+            console.log(`Evaluating ${projects.length} active projects...`);
             
             let totalNewAlerts = 0;
             let statusChanges = 0;
@@ -249,12 +249,12 @@ class AlertService {
                 if (isBehindSchedule) {
                     if (project.status !== 'Delayed') {
                         project.status = 'Delayed';
-                        console.log(`❗ Status Change: "${project.name}" is now marked as Delayed.`);
+                        console.log(`Status Change: "${project.name}" is now marked as Delayed.`);
                     }
                 } else {
                     if (project.status === 'Delayed') {
                         project.status = 'On Track';
-                        console.log(`✅ Status Change: "${project.name}" is now back On Track.`);
+                        console.log(`Status Change: "${project.name}" is now back On Track.`);
                     }
                 }
                 
@@ -276,16 +276,16 @@ class AlertService {
                     if (!existingAlert) {
                         await Alert.create(alertData);
                         totalNewAlerts++;
-                        console.log(`⚠️  New ${alertData.severity} alert: ${alertData.type} for project "${project.name}"`);
+                        console.log(` New ${alertData.severity} alert: ${alertData.type} for project "${project.name}"`);
                     }
                 }
             }
             
             await this.autoResolveAlerts();
-            console.log(`✅ Process complete. ${statusChanges} status changes made. ${totalNewAlerts} new alerts created.`);
+            console.log(`Process complete. ${statusChanges} status changes made. ${totalNewAlerts} new alerts created.`);
             
         } catch (error) {
-            console.error('❌ Automatic status update/alert generation failed:', error);
+            console.error('Automatic status update/alert generation failed:', error);
             throw error;
         }
     }
@@ -293,7 +293,7 @@ class AlertService {
     // FIXED ESCALATION ENGINE
     async escalateOldAlerts() {
         try {
-            console.log('⚙️  Running escalation engine...');
+            console.log(' Running escalation engine...');
             
             const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
             const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
@@ -313,7 +313,7 @@ class AlertService {
 
             for (const alert of agencyAlertsToEscalate) {
                 if (!alert.project?.state) {
-                    console.log(`⚠️  Skipping escalation for alert ${alert._id} - no state information`);
+                    console.log(` Skipping escalation for alert ${alert._id} - no state information`);
                     continue;
                 }
 
@@ -354,10 +354,10 @@ class AlertService {
                         alert.escalationLevel = 1;
                         await alert.save();
                         agencyEscalations++;
-                        console.log(`📤 Escalated agency alert ${alert._id} (${baseType}) to state officer ${stateOfficer.email}`);
+                        console.log(`Escalated agency alert ${alert._id} (${baseType}) to state officer ${stateOfficer.email}`);
                     }
                 } else {
-                    console.log(`⚠️  No state officer found for state: ${alert.project.state}`);
+                    console.log(` No state officer found for state: ${alert.project.state}`);
                 }
             }
             
@@ -373,7 +373,7 @@ class AlertService {
             const admins = await User.find({ role: 'CentralAdmin', isActive: true });
             
             if (admins.length === 0) {
-                console.log('⚠️  No central admins found for escalation');
+                console.log(' No central admins found for escalation');
             }
             
             for (const alert of stateAlertsToEscalate) {
@@ -407,7 +407,7 @@ class AlertService {
                         });
                         
                         stateEscalations++;
-                        console.log(`📤 Escalated state alert ${alert._id} (${alert.type} → admin_escalated_${baseType}) to admin ${admin.email}`);
+                        console.log(`Escalated state alert ${alert._id} (${alert.type}  admin_escalated_${baseType}) to admin ${admin.email}`);
                     }
                 }
                 
@@ -415,10 +415,10 @@ class AlertService {
                 await alert.save();
             }
             
-            console.log(`✅ Escalation engine finished. Agency→State: ${agencyEscalations}, State→Admin: ${stateEscalations}`);
+            console.log(`Escalation engine finished. AgencyState: ${agencyEscalations}, StateAdmin: ${stateEscalations}`);
             
         } catch (error) {
-            console.error('❌ Escalation engine failed:', error);
+            console.error('Escalation engine failed:', error);
             throw error;
         }
     }
@@ -465,7 +465,7 @@ class AlertService {
                     alert.resolvedAt = new Date();
                     await alert.save();
                     resolvedCount++;
-                    console.log(`✅ Auto-resolved alert: ${alert.type} for ${alert.project.name}`);
+                    console.log(`Auto-resolved alert: ${alert.type} for ${alert.project.name}`);
                     
                     await Alert.updateMany({
                         'metadata.originalAlertId': alert._id,
@@ -479,25 +479,25 @@ class AlertService {
             }
             
             if (resolvedCount > 0) {
-                console.log(`✅ Auto-resolved ${resolvedCount} alerts`);
+                console.log(`Auto-resolved ${resolvedCount} alerts`);
             }
             
         } catch (error) {
-            console.error('❌ Auto-resolve alerts failed:', error);
+            console.error('Auto-resolve alerts failed:', error);
             throw error;
         }
     }
     
     async runNightlyJob() {
         try {
-            console.log('🌙 Starting nightly job...');
+            console.log('Starting nightly job...');
             console.log('==================================');
             
             await this.generateAllAlerts();
             await this.escalateOldAlerts();
             
             console.log('==================================');
-            console.log('🌙 Nightly job completed successfully');
+            console.log('Nightly job completed successfully');
             
             return {
                 success: true,
@@ -506,7 +506,7 @@ class AlertService {
             };
             
         } catch (error) {
-            console.error('❌ Nightly job failed:', error);
+            console.error('Nightly job failed:', error);
             return {
                 success: false,
                 timestamp: new Date(),
@@ -516,7 +516,7 @@ class AlertService {
     }
     
     async testEscalation() {
-        console.log('🧪 Running test escalation...');
+        console.log('Running test escalation...');
         await this.escalateOldAlerts();
     }
     
@@ -533,7 +533,7 @@ class AlertService {
             return stats;
             
         } catch (error) {
-            console.error('❌ Failed to get escalation stats:', error);
+            console.error('Failed to get escalation stats:', error);
             throw error;
         }
     }

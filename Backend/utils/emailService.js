@@ -6,12 +6,12 @@ class EmailService {
         this.transporter = null;
     }
 
-    // ✅ Lazy initialization of transporter
+    // Lazy initialization of transporter
     getTransporter() {
         if (!this.transporter) {
             // Check if email credentials are configured
             if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-                console.warn('⚠️ Email credentials not configured. Email functionality will be disabled.');
+                console.warn('Email credentials not configured. Email functionality will be disabled.');
                 return null;
             }
 
@@ -30,9 +30,9 @@ class EmailService {
             // Verify connection on first initialization
             this.transporter.verify(function(error, success) {
                 if (error) {
-                    console.error('❌ Email transporter verification failed:', error);
+                    console.error('Email transporter verification failed:', error);
                 } else {
-                    console.log('✅ Email server is ready to send messages');
+                    console.log('Email server is ready to send messages');
                 }
             });
         }
@@ -45,12 +45,12 @@ class EmailService {
             const transporter = this.getTransporter();
             
             if (!transporter) {
-                console.warn('⚠️ Email not sent - transporter not configured');
+                console.warn('Email not sent - transporter not configured');
                 return { success: false, message: 'Email service not configured' };
             }
 
-            console.log('📧 Attempting to send email to:', to);
-            console.log('📧 Email config:', {
+            console.log('Attempting to send email to:', to);
+            console.log('Email config:', {
                 host: process.env.EMAIL_HOST,
                 port: process.env.EMAIL_PORT,
                 user: process.env.EMAIL_USER,
@@ -65,12 +65,12 @@ class EmailService {
                 attachments
             });
             
-            console.log('✅ Email sent successfully:', info.messageId);
-            console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
+            console.log('Email sent successfully:', info.messageId);
+            console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
             return info;
         } catch (error) {
-            console.error('❌ Email sending failed:', error);
-            console.error('❌ Error details:', {
+            console.error('Email sending failed:', error);
+            console.error('Error details:', {
                 message: error.message,
                 code: error.code,
                 command: error.command
@@ -196,7 +196,7 @@ const emailTemplates = {
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
                 <h2 style="color: ${approved ? '#16a34a' : '#dc2626'};">
-                    Milestone ${approved ? 'Approved ✓' : 'Rejected ✗'}
+                    Milestone ${approved ? 'Approved ' : 'Rejected '}
                 </h2>
                 <p>Dear Agency,</p>
                 
@@ -244,7 +244,7 @@ const emailTemplates = {
                     <h3 style="margin-top: 0;">Report Details:</h3>
                     <p><strong>Project:</strong> ${projectName}</p>
                     <p><strong>Agency:</strong> ${agencyName}</p>
-                    <p><strong>Amount Utilized:</strong> ₹${(amount / 100000).toFixed(2)} Lakhs</p>
+                    <p><strong>Amount Utilized:</strong> ${(amount / 100000).toFixed(2)} Lakhs</p>
                 </div>
 
                 <p>Please log in to the SAMANVAY platform to review the submitted certificate and approve or reject the report.</p>
@@ -273,7 +273,7 @@ const emailTemplates = {
                 <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <h3 style="margin-top: 0;">Submission Details:</h3>
                     <p><strong>Project:</strong> ${projectName}</p>
-                    <p><strong>Amount:</strong> ₹${(amount / 100000).toFixed(2)} Lakhs</p>
+                    <p><strong>Amount:</strong> ${(amount / 100000).toFixed(2)} Lakhs</p>
                     <p><strong>New Status:</strong> ${status}</p>
                 </div>
 

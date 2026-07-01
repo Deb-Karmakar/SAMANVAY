@@ -13,8 +13,8 @@ const getReportHTML = (data) => {
     const stateRows = byState.map(s => `
         <tr>
             <td>${s.state}</td>
-            <td>₹${s.budget.toFixed(2)} Cr</td>
-            <td>₹${s.disbursed.toFixed(2)} Cr</td>
+            <td>${s.budget.toFixed(2)} Cr</td>
+            <td>${s.disbursed.toFixed(2)} Cr</td>
             <td>${s.budget > 0 ? Math.round((s.disbursed / s.budget) * 100) : 0}%</td>
         </tr>
     `).join('');
@@ -22,8 +22,8 @@ const getReportHTML = (data) => {
     const componentRows = byComponent.map(c => `
          <tr>
             <td>${c.name}</td>
-            <td>₹${c.budget.toFixed(2)} Cr</td>
-            <td>₹${c.disbursed.toFixed(2)} Cr</td>
+            <td>${c.budget.toFixed(2)} Cr</td>
+            <td>${c.disbursed.toFixed(2)} Cr</td>
         </tr>
     `).join('');
 
@@ -56,15 +56,15 @@ const getReportHTML = (data) => {
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Sanctioned Budget</h3>
-                    <p>₹${overall.totalBudget.toFixed(2)} Cr</p>
+                    <p>${overall.totalBudget.toFixed(2)} Cr</p>
                 </div>
                 <div class="stat-card">
                     <h3>Total Funds Disbursed</h3>
-                    <p>₹${overall.totalDisbursed.toFixed(2)} Cr</p>
+                    <p>${overall.totalDisbursed.toFixed(2)} Cr</p>
                 </div>
                  <div class="stat-card">
                     <h3>Available for Allocation</h3>
-                    <p>₹${(overall.totalBudget - overall.totalDisbursed).toFixed(2)} Cr</p>
+                    <p>${(overall.totalBudget - overall.totalDisbursed).toFixed(2)} Cr</p>
                 </div>
                  <div class="stat-card">
                     <h3>Budget Utilization</h3>
@@ -288,8 +288,8 @@ const getStateReportHTML = (data, stateName) => {
         return `
             <tr>
                 <td>${a.agencyName}</td>
-                <td>₹${a.distributed.toFixed(2)} Cr</td>
-                <td>₹${a.utilized.toFixed(2)} Cr</td>
+                <td>${a.distributed.toFixed(2)} Cr</td>
+                <td>${a.utilized.toFixed(2)} Cr</td>
                 <td>${rate}%</td>
             </tr>
         `;
@@ -319,9 +319,9 @@ const getStateReportHTML = (data, stateName) => {
 
             <div class="summary-box">
                 <h2>Overall Summary</h2>
-                <p><strong>Total Allocation Received from Centre:</strong> ₹${overall.totalReceived.toFixed(2)} Cr</p>
-                <p><strong>Total Distributed to Agencies:</strong> ₹${overall.totalDistributed.toFixed(2)} Cr</p>
-                <p><strong>Total Funds Utilized (Approved):</strong> ₹${overall.totalUtilized.toFixed(2)} Cr</p>
+                <p><strong>Total Allocation Received from Centre:</strong> ${overall.totalReceived.toFixed(2)} Cr</p>
+                <p><strong>Total Distributed to Agencies:</strong> ${overall.totalDistributed.toFixed(2)} Cr</p>
+                <p><strong>Total Funds Utilized (Approved):</strong> ${overall.totalUtilized.toFixed(2)} Cr</p>
             </div>
 
             <h2>Agency-wise Breakdown</h2>

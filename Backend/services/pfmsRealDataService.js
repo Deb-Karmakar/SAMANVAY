@@ -11,7 +11,7 @@ class PFMSRealDataService {
     
     // Calculate real PFMS data from projects and utilization reports
     async calculateRealPFMSData(fiscalYear) {
-        console.log(`📊 Calculating real PFMS data from projects and utilization reports for ${fiscalYear}...`);
+        console.log(`Calculating real PFMS data from projects and utilization reports for ${fiscalYear}...`);
         
         try {
             // Get all projects from database
@@ -24,10 +24,10 @@ class PFMSRealDataService {
                 status: 'Approved' 
             }).populate('project').lean();
             
-            console.log(`📁 Found ${projects.length} projects and ${utilizationReports.length} approved utilization reports`);
+            console.log(` Found ${projects.length} projects and ${utilizationReports.length} approved utilization reports`);
             
             if (projects.length === 0) {
-                console.warn('⚠️ No projects found. Using mock data instead.');
+                console.warn('No projects found. Using mock data instead.');
                 return this.generateMockData(fiscalYear);
             }
             
@@ -69,7 +69,7 @@ class PFMSRealDataService {
                 
                 if (!state || state.trim() === '') {
                     projectsWithoutState++;
-                    console.warn(`⚠️ Project ${project._id} has no state defined. Using 'Unknown State'.`);
+                    console.warn(`Project ${project._id} has no state defined. Using 'Unknown State'.`);
                     state = 'Unknown State';
                 }
                 
@@ -122,7 +122,7 @@ class PFMSRealDataService {
                 // Get REAL utilization from utilization reports
                 if (projectUtilizationMap[projectId]) {
                     utilized = projectUtilizationMap[projectId];
-                    console.log(`✅ Project ${project.name} has real utilization: ₹${utilized.toLocaleString()}`);
+                    console.log(`Project ${project.name} has real utilization: ${utilized.toLocaleString()}`);
                 } else {
                     // Fallback to assignment data or estimates
                     if (project.assignments && project.assignments.length > 0) {
@@ -177,9 +177,9 @@ class PFMSRealDataService {
                 projectsProcessed++;
             });
             
-            console.log(`📈 Processed ${projectsProcessed} projects with ${utilizationReports.length} utilization reports`);
+            console.log(` Processed ${projectsProcessed} projects with ${utilizationReports.length} utilization reports`);
             if (projectsWithoutState > 0) {
-                console.warn(`⚠️ ${projectsWithoutState} projects had no state information`);
+                console.warn(`${projectsWithoutState} projects had no state information`);
             }
             
             // Convert state data to array and calculate rates
@@ -242,11 +242,11 @@ class PFMSRealDataService {
             // Create transactions from utilization reports
             await this.createTransactionsFromUtilization(utilizationReports, fiscalYear);
             
-            console.log(`✅ Calculated real PFMS data:`);
+            console.log(`Calculated real PFMS data:`);
             console.log(`   - States with data: ${stateBreakdown.length}`);
-            console.log(`   - Total Allocated: ₹${totalAllocated.toLocaleString()}`);
-            console.log(`   - Total Released: ₹${totalReleased.toLocaleString()}`);
-            console.log(`   - Total Utilized (Real): ₹${totalUtilized.toLocaleString()}`);
+            console.log(`   - Total Allocated: ${totalAllocated.toLocaleString()}`);
+            console.log(`   - Total Released: ${totalReleased.toLocaleString()}`);
+            console.log(`   - Total Utilized (Real): ${totalUtilized.toLocaleString()}`);
             console.log(`   - Utilization Rate: ${nationalUtilizationRate}%`);
             
             return {
@@ -266,7 +266,7 @@ class PFMSRealDataService {
             };
             
         } catch (error) {
-            console.error('❌ Error calculating real PFMS data:', error);
+            console.error('Error calculating real PFMS data:', error);
             throw error;
         }
     }
@@ -344,9 +344,9 @@ class PFMSRealDataService {
                             approvedAt: report.reviewedAt
                         }
                     });
-                    console.log(`✅ Created PFMS transaction for utilization report ${report._id}`);
+                    console.log(`Created PFMS transaction for utilization report ${report._id}`);
                 } catch (error) {
-                    console.error(`❌ Failed to create transaction for report ${report._id}:`, error.message);
+                    console.error(`Failed to create transaction for report ${report._id}:`, error.message);
                 }
             }
         }

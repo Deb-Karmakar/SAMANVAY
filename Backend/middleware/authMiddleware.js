@@ -16,15 +16,15 @@ const protect = asyncHandler(async (req, res, next) => {
                 throw new Error('User not found');
             }
             
-            console.log('✅ Authenticated user:', req.user.email, 'Role:', req.user.role);
+            console.log('Authenticated user:', req.user.email, 'Role:', req.user.role);
             next();
         } catch (error) {
-            console.error('❌ Token verification failed:', error.message);
+            console.error('Token verification failed:', error.message);
             res.status(401);
             throw new Error('Not authorized, token failed');
         }
     } else {
-        console.error('❌ No token provided');
+        console.error('No token provided');
         res.status(401);
         throw new Error('Not authorized, no token');
     }
@@ -54,7 +54,7 @@ const isExecutingAgency = (req, res, next) => {
     }
 };
 
-// ✅ Flexible role-based access control
+// Flexible role-based access control
 const restrictTo = (...roles) => {
     return (req, res, next) => {
         // Check if user is authenticated
@@ -67,14 +67,14 @@ const restrictTo = (...roles) => {
 
         // Check if user's role is in the allowed roles
         if (!roles.includes(req.user.role)) {
-            console.log(`❌ Access denied for ${req.user.email}. Required: ${roles.join(' or ')}, Got: ${req.user.role}`);
+            console.log(`Access denied for ${req.user.email}. Required: ${roles.join(' or ')}, Got: ${req.user.role}`);
             return res.status(403).json({ 
                 success: false,
                 message: `Access denied. Required role: ${roles.join(' or ')}` 
             });
         }
 
-        console.log(`✅ Access granted for ${req.user.email} with role ${req.user.role}`);
+        console.log(`Access granted for ${req.user.email} with role ${req.user.role}`);
         next();
     };
 };

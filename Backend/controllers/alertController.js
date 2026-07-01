@@ -106,7 +106,7 @@ const triggerEscalation = asyncHandler(async (req, res) => {
         throw new Error('Not authorized');
     }
     
-    console.log('🧪 Manual escalation triggered by admin:', req.user.email);
+    console.log('Manual escalation triggered by admin:', req.user.email);
     await alertService.escalateOldAlerts();
     
     const stats = await alertService.getEscalationStats();
@@ -125,7 +125,7 @@ const runNightlyJob = asyncHandler(async (req, res) => {
         throw new Error('Not authorized');
     }
     
-    console.log('🌙 Manual nightly job triggered by admin:', req.user.email);
+    console.log('Manual nightly job triggered by admin:', req.user.email);
     const result = await alertService.runNightlyJob();
     
     res.status(200).json(result);
