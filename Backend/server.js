@@ -11,12 +11,12 @@ import testRoutes from './routes/testRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
 import fundRoutes from './routes/fundRoutes.js'
 import utilizationRoutes from './routes/utilizationRoutes.js';
-import pfmsRoutes from './routes/pfmsRoutes.js'
+
 import reportRoutes from './routes/reportRoutes.js';
 import chatbotRoutes from './routes/chatbot.js';
 import agencyMatchingRoutes from './routes/agencyMatching.js';
 
-import { initializePFMSCronJobs } from './services/pfmsCronService.js';
+
 import { startAlertCron } from './services/cronService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,7 +62,7 @@ app.use('/api/communications', communicationRoutes);
 app.use('/api/test', testRoutes);
 app.use('/uploads/pdfs', express.static(path.join(__dirname, 'uploads/pdfs')));
 app.use('/api/alerts', alertRoutes);
-app.use('/api/pfms', pfmsRoutes);
+
 app.use('/api/reports', reportRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/agency-matching', agencyMatchingRoutes);
@@ -71,5 +71,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   startAlertCron();
-  initializePFMSCronJobs();
+
 });

@@ -1,25 +1,9 @@
-// Backend/controllers/alertController.js
-import Alert from '../models/alertModel.js';
 import alertService from '../services/alertService.js';
 import asyncHandler from 'express-async-handler';
 
 // Get alerts for current user
 const getMyAlerts = asyncHandler(async (req, res) => {
-    const query = {
-        recipient: req.user._id,
-        acknowledged: false,
-        autoResolved: false,
-        $or: [
-            { snoozedUntil: { $exists: false } },
-            { snoozedUntil: { $lt: new Date() } }
-        ]
-    };
-
-    const alerts = await Alert.find(query)
-        .populate('project', 'name state component')
-        .populate('agency', 'name')
-        .sort({ escalationLevel: -1, severity: 1, createdAt: -1 })
-        .limit(100);
+    const alerts = await alertService.getMyAlerts(req.user._id);
     
     // Group by severity and escalation
     const grouped = {
@@ -38,54 +22,29 @@ const getMyAlerts = asyncHandler(async (req, res) => {
 
 // Acknowledge an alert
 const acknowledgeAlert = asyncHandler(async (req, res) => {
-    const alert = await Alert.findById(req.params.id);
-    
-    if (!alert) {
-        res.status(404);
-        throw new Error('Alert not found');
+    try {
+        const alert = await alertService.acknowledgeAlert(req.params.id, req.user._id);
+        res.status(200).json({ message: 'Alert acknowledged', alert });
+    } catch (error) {
+        if (error.message === 'Alert not found') res.status(404);
+        else if (error.message === 'Not authorized to acknowledge this alert') res.status(403);
+        else res.status(400);
+        throw error;
     }
-    
-    // Check authorization
-    if (alert.recipient.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to acknowledge this alert');
-    }
-    
-    alert.acknowledged = true;
-    alert.acknowledgedBy = req.user._id;
-    alert.acknowledgedAt = new Date();
-    
-    await alert.save();
-    
-    res.status(200).json({ message: 'Alert acknowledged', alert });
 });
 
 // Snooze an alert
 const snoozeAlert = asyncHandler(async (req, res) => {
-    const { days } = req.body;
-    const alert = await Alert.findById(req.params.id);
-    
-    if (!alert) {
-        res.status(404);
-        throw new Error('Alert not found');
+    try {
+        const { days } = req.body;
+        const alert = await alertService.snoozeAlert(req.params.id, req.user._id, days);
+        res.status(200).json({ message: `Alert snoozed for ${days || 3} days`, alert });
+    } catch (error) {
+        if (error.message === 'Alert not found') res.status(404);
+        else if (error.message === 'Not authorized to snooze this alert') res.status(403);
+        else res.status(400);
+        throw error;
     }
-    
-    // Check authorization
-    if (alert.recipient.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to snooze this alert');
-    }
-    
-    const snoozeDate = new Date();
-    snoozeDate.setDate(snoozeDate.getDate() + (days || 3));
-    
-    alert.snoozedUntil = snoozeDate;
-    await alert.save();
-    
-    res.status(200).json({ 
-        message: `Alert snoozed for ${days || 3} days`, 
-        alert 
-    });
 });
 
 // Manually trigger alert generation (admin only)

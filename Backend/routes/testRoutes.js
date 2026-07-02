@@ -1,6 +1,6 @@
 // Backend/routes/testRoutes.js
 import express from 'express';
-import { sendEmail } from '../utils/emailService.js';
+import { sendEmail } from '../services/emailService.js';
 
 const router = express.Router();
 

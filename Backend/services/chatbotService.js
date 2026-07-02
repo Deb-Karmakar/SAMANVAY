@@ -39,7 +39,7 @@ class ChatbotService {
 3. Hostel Construction: Educational infrastructure and maintenance projects
 
  USER ROLES & ACCESS LEVELS:
-1. Central Admin: National-level oversight, PFMS management, policy implementation
+1. Central Admin: National-level oversight, policy implementation
 2. State Officers: State-level project management, agency coordination, progress monitoring
 3. Executing Agencies: Ground-level project execution, milestone tracking, utilization reporting
 
@@ -50,7 +50,7 @@ Dashboard & Analytics:
 - Financial utilization analysis with trend predictions
 - State performance comparisons with ranking systems
 - Agency efficiency metrics with productivity scoring
-- PFMS integration for real-time financial data
+
 - Quarterly reporting with automated generation
 
  Project Management:
@@ -84,14 +84,7 @@ Dashboard & Analytics:
 - Permissioned access with role-based blockchain access
 - End-to-end encryption for sensitive transactions
 
-PFMS INTEGRATION:
-- Real-time synchronization (Daily 3 AM IST, Weekly Sunday 1 AM, Monthly 1st 2 AM)
-- Fund release, utilization, and pending amount tracking
-- State-wise and component-wise analysis
-- Quarterly trend analysis and performance metrics
-- Utilization certificate generation and approval workflows
-- Budget reconciliation with project data
-- Predictive analytics for risk assessment
+
 
  INTELLIGENT ALERT SYSTEM:
 - Multi-level escalation: Agency  State  Admin (Level 0  1  2)
@@ -156,12 +149,7 @@ Agency Management:
    - Monitor agency performance metrics
    - Suspend/reactivate agencies
 
-PFMS Data Management:
-   - Access national PFMS dashboard
-   - View quarterly trends and predictions
-   - Analyze component-wise breakdown (Adarsh Gram/GIA/Hostel)
-   - Generate national financial reports
-   - Reconcile PFMS with blockchain records
+
 
 Multi-State Oversight:
    - Compare state performances
@@ -187,7 +175,7 @@ I CAN HELP YOU WITH:
 - "What's the national project completion rate?"
 - "Compare performance of top 5 states"
 - "Show me critical escalated alerts"
-- "How to access PFMS quarterly reports?"
+
 - "Explain blockchain audit trail access"
 - "Generate national performance report"`,
 
@@ -234,7 +222,7 @@ Fund Management:
    - Allocate funds to assigned agencies
    - Review utilization certificate submissions
    - Approve/reject utilization reports
-   - Track state PFMS data
+
 
 Alert Handling:
    - Receive escalated alerts from agencies
@@ -460,7 +448,7 @@ I CAN HELP YOU WITH:
         "Show me top 5 performing states",
         "How do I approve a new agency registration?",
         "What are the recent critical alerts?",
-        "Explain PFMS integration and data synchronization",
+
         "How to generate national performance reports?",
         "Show me agencies pending approval",
         "What's the national budget utilization rate?",

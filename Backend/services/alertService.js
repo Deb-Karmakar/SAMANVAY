@@ -1,5 +1,8 @@
 // Backend/services/alertService.js (Complete Fixed Version)
 
+import projectRepository from '../repositories/projectRepository.js';
+import alertRepository from '../repositories/alertRepository.js';
+import userRepository from '../repositories/userRepository.js';
 import Project from '../models/projectModel.js';
 import Alert from '../models/alertModel.js';
 import User from '../models/userModel.js';
@@ -20,6 +23,46 @@ class AlertService {
         }
         
         return cleanType;
+    }
+
+    async getMyAlerts(userId) {
+        return await alertRepository.findMyAlerts(userId);
+    }
+
+    async acknowledgeAlert(alertId, userId) {
+        const alert = await alertRepository.findById(alertId);
+        
+        if (!alert) {
+            throw new Error('Alert not found');
+        }
+        
+        if (alert.recipient.toString() !== userId.toString()) {
+            throw new Error('Not authorized to acknowledge this alert');
+        }
+        
+        alert.acknowledged = true;
+        alert.acknowledgedBy = userId;
+        alert.acknowledgedAt = new Date();
+        
+        return await alertRepository.save(alert);
+    }
+
+    async snoozeAlert(alertId, userId, days) {
+        const alert = await alertRepository.findById(alertId);
+        
+        if (!alert) {
+            throw new Error('Alert not found');
+        }
+        
+        if (alert.recipient.toString() !== userId.toString()) {
+            throw new Error('Not authorized to snooze this alert');
+        }
+        
+        const snoozeDate = new Date();
+        snoozeDate.setDate(snoozeDate.getDate() + (days || 3));
+        
+        alert.snoozedUntil = snoozeDate;
+        return await alertRepository.save(alert);
     }
     
     // Calculate expected progress based on timeline

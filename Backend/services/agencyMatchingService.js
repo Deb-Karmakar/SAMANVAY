@@ -1,6 +1,6 @@
 import Groq from 'groq-sdk';
-import Agency from '../models/agencyModel.js';
-import Project from '../models/projectModel.js';
+import agencyRepository from '../repositories/agencyRepository.js';
+import projectRepository from '../repositories/projectRepository.js';
 
 class AgencyMatchingService {
   constructor() {
@@ -90,9 +90,7 @@ class AgencyMatchingService {
 
   // Helper: Get agency completion rate
   async getAgencyCompletionRate(agencyId) {
-    const projects = await Project.find({
-      'assignments.agency': agencyId,
-    });
+    const projects = await projectRepository.findByAgency(agencyId);
 
     if (projects.length === 0) return 0;
 
@@ -102,19 +100,12 @@ class AgencyMatchingService {
 
   // Helper: Get count of similar projects
   async getSimilarProjectsCount(agencyId, component) {
-    return await Project.countDocuments({
-      'assignments.agency': agencyId,
-      component,
-      status: 'Completed',
-    });
+    return await projectRepository.countByAgencyComponentAndStatus(agencyId, component, 'Completed');
   }
 
   // Helper: Calculate workload score (20 - less is better)
   async getWorkloadScore(agencyId) {
-    const activeProjects = await Project.countDocuments({
-      'assignments.agency': agencyId,
-      status: { $in: ['On Track', 'Delayed', 'Pending Approval'] },
-    });
+    const activeProjects = await projectRepository.countByAgencyAndStatuses(agencyId, ['On Track', 'Delayed', 'Pending Approval']);
 
     // Penalize agencies with too many active projects
     if (activeProjects === 0) return 20;
@@ -132,10 +123,7 @@ class AgencyMatchingService {
 
   // Helper: Get budget utilization efficiency
   async getBudgetEfficiency(agencyId) {
-    const projects = await Project.find({
-      'assignments.agency': agencyId,
-      status: 'Completed',
-    });
+    const projects = await projectRepository.findByAgencyAndStatus(agencyId, 'Completed');
 
     if (projects.length === 0) return 85; // INCREASED default from 80 to 85
 
@@ -259,10 +247,7 @@ Be professional, objective, and focus on the project's success. Don't penalize n
   async getProjectAssignmentRecommendations(projectData, stateFilter) {
     try {
       // Fetch all eligible agencies
-      const agencies = await Agency.find({
-        state: stateFilter,
-        status: 'Active',
-      });
+      const agencies = await agencyRepository.findByStateAndStatus(stateFilter, 'Active');
 
       if (agencies.length === 0) {
         return {
